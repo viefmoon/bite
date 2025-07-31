@@ -24,17 +24,19 @@ interface FilterButtonProps {
   theme: any;
   styles: any;
   count: number;
-  onFilterChange: (filterType: 'ALL' | 'WHATSAPP' | keyof typeof OrderTypeEnum) => void;
+  onFilterChange: (
+    filterType: 'ALL' | 'WHATSAPP' | keyof typeof OrderTypeEnum,
+  ) => void;
 }
 
-const FilterButton: React.FC<FilterButtonProps> = ({ 
-  filterType, 
-  icon, 
-  isActive, 
-  theme, 
-  styles, 
-  count, 
-  onFilterChange 
+const FilterButton: React.FC<FilterButtonProps> = ({
+  filterType,
+  icon,
+  isActive,
+  theme,
+  styles,
+  count,
+  onFilterChange,
 }) => (
   <Pressable
     style={[
@@ -51,9 +53,7 @@ const FilterButton: React.FC<FilterButtonProps> = ({
     <Icon
       source={icon}
       size={26}
-      color={
-        isActive ? theme.colors.primary : theme.colors.onSurfaceVariant
-      }
+      color={isActive ? theme.colors.primary : theme.colors.onSurfaceVariant}
     />
     {count > 0 && (
       <View
@@ -63,9 +63,7 @@ const FilterButton: React.FC<FilterButtonProps> = ({
             backgroundColor: isActive
               ? theme.colors.error
               : theme.colors.errorContainer,
-            borderColor: isActive
-              ? theme.colors.error
-              : theme.colors.outline,
+            borderColor: isActive ? theme.colors.error : theme.colors.outline,
           },
         ]}
       >
@@ -94,53 +92,56 @@ export const OrderFilterHeader: React.FC<OrderFilterHeaderProps> = ({
   const theme = useAppTheme();
   const responsive = useResponsive();
 
-  const styles = useMemo(() => ({
-    header: {
-      paddingHorizontal: 0,
-      paddingVertical: 0,
-      backgroundColor: 'transparent',
-      elevation: 0,
-    },
-    headerContent: {
-      flexDirection: 'row' as const,
-      alignItems: 'center' as const,
-      gap: 0,
-    },
-    filterContainer: {
-      flex: 1,
-      flexDirection: 'row' as const,
-      gap: 0,
-    },
-    filterButton: {
-      flex: 1,
-      height: responsive.isTablet ? 44 : 52,
-      justifyContent: 'center' as const,
-      alignItems: 'center' as const,
-      borderRadius: 0,
-      elevation: 1,
-      position: 'relative' as const,
-    },
-    filterButtonActive: {
-      elevation: 3,
-    },
-    countBadge: {
-      position: 'absolute' as const,
-      top: responsive.isTablet ? 3 : 6,
-      right: responsive.isTablet ? 3 : 6,
-      minWidth: responsive.isTablet ? 18 : 22,
-      height: responsive.isTablet ? 18 : 22,
-      borderRadius: responsive.isTablet ? 9 : 11,
-      justifyContent: 'center' as const,
-      alignItems: 'center' as const,
-      paddingHorizontal: responsive.isTablet ? 4 : 6,
-      borderWidth: 1,
-      elevation: 2,
-    },
-    countBadgeText: {
-      fontSize: responsive.isTablet ? 10 : 12,
-      fontWeight: '700' as const,
-    },
-  }), [responsive]);
+  const styles = useMemo(
+    () => ({
+      header: {
+        paddingHorizontal: 0,
+        paddingVertical: 0,
+        backgroundColor: 'transparent',
+        elevation: 0,
+      },
+      headerContent: {
+        flexDirection: 'row' as const,
+        alignItems: 'center' as const,
+        gap: 0,
+      },
+      filterContainer: {
+        flex: 1,
+        flexDirection: 'row' as const,
+        gap: 0,
+      },
+      filterButton: {
+        flex: 1,
+        height: responsive.isTablet ? 44 : 52,
+        justifyContent: 'center' as const,
+        alignItems: 'center' as const,
+        borderRadius: 0,
+        elevation: 1,
+        position: 'relative' as const,
+      },
+      filterButtonActive: {
+        elevation: 3,
+      },
+      countBadge: {
+        position: 'absolute' as const,
+        top: responsive.isTablet ? 3 : 6,
+        right: responsive.isTablet ? 3 : 6,
+        minWidth: responsive.isTablet ? 18 : 22,
+        height: responsive.isTablet ? 18 : 22,
+        borderRadius: responsive.isTablet ? 9 : 11,
+        justifyContent: 'center' as const,
+        alignItems: 'center' as const,
+        paddingHorizontal: responsive.isTablet ? 4 : 6,
+        borderWidth: 1,
+        elevation: 2,
+      },
+      countBadgeText: {
+        fontSize: responsive.isTablet ? 10 : 12,
+        fontWeight: '700' as const,
+      },
+    }),
+    [responsive],
+  );
 
   const getFilterCount = (
     filterType: 'ALL' | 'WHATSAPP' | keyof typeof OrderTypeEnum,
