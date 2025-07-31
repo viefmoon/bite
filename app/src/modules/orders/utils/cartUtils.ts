@@ -30,10 +30,9 @@ export interface CartItem {
     | 'CANCELLED';
   selectedPizzaCustomizations?: SelectedPizzaCustomization[];
   pizzaExtraCost?: number;
-  // Estado explícito para modo de edición
   isNew?: boolean;
   isModified?: boolean;
-  originalItemIds?: string[]; // IDs de los ítems originales en la BD
+  originalItemIds?: string[];
 }
 
 const generateId = (): string => {
@@ -123,17 +122,13 @@ export const areCartItemsEqual = (
     preparationStatus?: string;
   },
 ): boolean => {
-  // Comparar propiedades básicas
   if (item1.productId !== item2.productId) return false;
   if (item1.variantId !== item2.variantId) return false;
   if (item1.preparationNotes !== item2.preparationNotes) return false;
   if (item1.preparationStatus !== item2.preparationStatus) return false;
 
-  // Comparar modificadores
   if (!areModifiersEqual(item1.modifiers || [], item2.modifiers || []))
     return false;
-
-  // Comparar personalizaciones de pizza
   if (
     !arePizzaCustomizationsEqual(
       item1.selectedPizzaCustomizations,
@@ -160,11 +155,9 @@ export const addItemToCart = (
     ? product.variants?.find((v) => v.id === variantId)
     : undefined;
 
-  // Determinar el precio base: variante tiene prioridad sobre producto
   let unitPrice: number;
 
   if (variantToAdd) {
-    // Si hay variante seleccionada, debe tener precio
     if (typeof variantToAdd.price !== 'number' || variantToAdd.price == null) {
       throw new Error(
         `La variante '${variantToAdd.name}' no tiene un precio válido`,
@@ -172,7 +165,6 @@ export const addItemToCart = (
     }
     unitPrice = variantToAdd.price;
   } else {
-    // Si no hay variante, el producto debe tener precio
     if (typeof product.price !== 'number' || product.price == null) {
       throw new Error(
         `El producto '${product.name}' no tiene un precio válido`,
@@ -208,7 +200,6 @@ export const addItemToCart = (
     return [...currentItems, newItem];
   }
 
-  // Buscar si ya existe un item idéntico
   const existingItemIndex = currentItems.findIndex((item) => {
     if (item.productId !== product.id) return false;
     if (item.variantId !== variantId) return false;
@@ -226,7 +217,6 @@ export const addItemToCart = (
   });
 
   if (existingItemIndex !== -1) {
-    // Actualizar item existente
     const updatedItems = [...currentItems];
     const existingItem = updatedItems[existingItemIndex];
     const newQuantity = existingItem.quantity + quantity;
@@ -245,7 +235,6 @@ export const addItemToCart = (
 
     return updatedItems;
   } else {
-    // Crear nuevo item
     const newItem: CartItem = {
       id: generateId(),
       productId: product.id,
@@ -308,7 +297,6 @@ export const updateItemInCart = (
             ? selectedPizzaCustomizations
             : item.selectedPizzaCustomizations,
         pizzaExtraCost,
-        // Marcar como modificado si no es un ítem nuevo
         isModified: item.isNew ? false : true,
       };
     }
@@ -336,7 +324,6 @@ export const updateItemQuantityInCart = (
           item.pizzaExtraCost || 0,
           quantity,
         ),
-        // Marcar como modificado si no es un ítem nuevo
         isModified: item.isNew ? false : true,
       };
     }
@@ -349,4 +336,111 @@ export const removeItemFromCart = (
   itemId: string,
 ): CartItem[] => {
   return currentItems.filter((item) => item.id !== itemId);
+};
+
+/**
+ * Formatea las personalizaciones de pizza agrupando por mitades:
+ * - Pizza completa: "Especial con jamón, sin chile"
+ * - Pizza mitades: "Especial con jamón / Adelita sin piña"
+ * - Cada mitad se formatea como: "Sabor con ingrediente1, sin ingrediente2"
+ */
+export const formatPizzaCustomizations = (
+  selectedPizzaCustomizations: SelectedPizzaCustomization[] = [],
+  pizzaCustomizationsData?: Array<{
+    id: string;
+    name: string;
+    type: 'FLAVOR' | 'INGREDIENT';
+  }>,
+): string => {
+  if (!selectedPizzaCustomizations || selectedPizzaCustomizations.length === 0) {
+    return '';
+  }
+
+  const fullPizza: SelectedPizzaCustomization[] = [];
+  const half1: SelectedPizzaCustomization[] = [];
+  const half2: SelectedPizzaCustomization[] = [];
+
+  selectedPizzaCustomizations.forEach((customization) => {
+    switch (customization.half) {
+      case 'FULL':
+        fullPizza.push(customization);
+        break;
+      case 'HALF_1':
+        half1.push(customization);
+        break;
+      case 'HALF_2':
+        half2.push(customization);
+        break;
+    }
+  });
+
+  const formatHalf = (customizations: SelectedPizzaCustomization[]): string => {
+    const flavors: string[] = [];
+    const addedIngredients: string[] = [];
+    const removedIngredients: string[] = [];
+
+    customizations.forEach((customization) => {
+      let customData = null;
+      
+      if (customization.pizzaCustomization) {
+        customData = customization.pizzaCustomization;
+      }
+      
+      if (!customData && pizzaCustomizationsData && Array.isArray(pizzaCustomizationsData)) {
+        customData = pizzaCustomizationsData.find(
+          (c) => c.id === customization.pizzaCustomizationId,
+        );
+      }
+      if (!customData) {
+        return;
+      }
+
+      if (customData.type === 'FLAVOR') {
+        flavors.push(customData.name);
+      } else if (customData.type === 'INGREDIENT') {
+        if (customization.action === 'ADD') {
+          addedIngredients.push(customData.name);
+        } else if (customization.action === 'REMOVE') {
+          removedIngredients.push(customData.name);
+        }
+      }
+    });
+
+    const parts: string[] = [];
+
+    if (flavors.length > 0) {
+      parts.push(flavors.join(' - '));
+    }
+
+    if (addedIngredients.length > 0) {
+      parts.push(`con ${addedIngredients.join(', ')}`);
+    }
+
+    if (removedIngredients.length > 0) {
+      parts.push(`sin ${removedIngredients.join(', ')}`);
+    }
+
+    return parts.join(', ');
+  };
+
+  if (fullPizza.length > 0) {
+    return formatHalf(fullPizza);
+  }
+  const halfParts: string[] = [];
+  
+  if (half1.length > 0) {
+    const half1Formatted = formatHalf(half1);
+    if (half1Formatted) {
+      halfParts.push(half1Formatted);
+    }
+  }
+  
+  if (half2.length > 0) {
+    const half2Formatted = formatHalf(half2);
+    if (half2Formatted) {
+      halfParts.push(half2Formatted);
+    }
+  }
+
+  return halfParts.join(' / ');
 };

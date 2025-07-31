@@ -4,7 +4,9 @@ import { Text, IconButton, List } from 'react-native-paper';
 import { Swipeable } from 'react-native-gesture-handler';
 import { useAppTheme } from '@/app/styles/theme';
 import type { CartItem } from '../../utils/cartUtils';
+import { formatPizzaCustomizations } from '../../utils/cartUtils';
 import { PreparationStatusInfo } from '../../utils/formatters';
+import { usePizzaCustomizationsAllActive } from '../../../pizzaCustomizations/hooks/usePizzaCustomizationsQueries';
 
 interface OrderItemsListProps {
   items: CartItem[];
@@ -25,6 +27,9 @@ export const OrderItemsList: React.FC<OrderItemsListProps> = ({
 }) => {
   const theme = useAppTheme();
   const styles = useMemo(() => createStyles(theme), [theme]);
+  
+  // Obtener todas las pizza customizations activas (sin paginación)
+  const { data: pizzaCustomizationsData } = usePizzaCustomizationsAllActive();
 
   const renderRightActions = (
     _progress: Animated.AnimatedInterpolation<number>,
@@ -112,67 +117,76 @@ export const OrderItemsList: React.FC<OrderItemsListProps> = ({
               </View>
             </View>
           )}
-          description={() => (
-            <View>
-              {item.modifiers.length > 0 && (
-                <Text style={styles.modifiersText}>
-                  {item.modifiers.map((m) => m.name).join(', ')}
-                </Text>
-              )}
-              {item.selectedPizzaCustomizations &&
-                item.selectedPizzaCustomizations.length > 0 && (
-                  <Text style={styles.customizationText}>
-                    {item.selectedPizzaCustomizations.length} personalizaciones
+          description={() => {
+            const pizzaCustomizationsFormatted = item.selectedPizzaCustomizations && 
+              item.selectedPizzaCustomizations.length > 0 
+                ? formatPizzaCustomizations(
+                    item.selectedPizzaCustomizations,
+                    pizzaCustomizationsData
+                  )
+                : '';
+
+            return (
+              <View>
+                {item.modifiers.length > 0 && (
+                  <Text style={styles.modifiersText}>
+                    {item.modifiers.map((m) => m.name).join(', ')}
                   </Text>
                 )}
-              {item.preparationNotes && (
-                <Text style={styles.notesText}>
-                  Nota: {item.preparationNotes}
-                </Text>
-              )}
-              {isEditMode && item.preparationStatus && (
-                <View style={styles.statusContainer}>
-                  <View
-                    style={[
-                      styles.statusBadge,
-                      {
-                        backgroundColor:
-                          PreparationStatusInfo.getColor(
-                            item.preparationStatus,
-                            theme,
-                          ) + '20',
-                      },
-                    ]}
-                  >
+                {pizzaCustomizationsFormatted && (
+                  <Text style={styles.customizationText}>
+                    ({pizzaCustomizationsFormatted})
+                  </Text>
+                )}
+                {item.preparationNotes && (
+                  <Text style={styles.notesText}>
+                    Nota: {item.preparationNotes}
+                  </Text>
+                )}
+                {isEditMode && item.preparationStatus && (
+                  <View style={styles.statusContainer}>
                     <View
                       style={[
-                        styles.statusDot,
+                        styles.statusBadge,
                         {
-                          backgroundColor: PreparationStatusInfo.getColor(
-                            item.preparationStatus,
-                            theme,
-                          ),
-                        },
-                      ]}
-                    />
-                    <Text
-                      style={[
-                        styles.statusText,
-                        {
-                          color: PreparationStatusInfo.getColor(
-                            item.preparationStatus,
-                            theme,
-                          ),
+                          backgroundColor:
+                            PreparationStatusInfo.getColor(
+                              item.preparationStatus,
+                              theme,
+                            ) + '20',
                         },
                       ]}
                     >
-                      {PreparationStatusInfo.getLabel(item.preparationStatus)}
-                    </Text>
+                      <View
+                        style={[
+                          styles.statusDot,
+                          {
+                            backgroundColor: PreparationStatusInfo.getColor(
+                              item.preparationStatus,
+                              theme,
+                            ),
+                          },
+                        ]}
+                      />
+                      <Text
+                        style={[
+                          styles.statusText,
+                          {
+                            color: PreparationStatusInfo.getColor(
+                              item.preparationStatus,
+                              theme,
+                            ),
+                          },
+                        ]}
+                      >
+                        {PreparationStatusInfo.getLabel(item.preparationStatus)}
+                      </Text>
+                    </View>
                   </View>
-                </View>
-              )}
-            </View>
-          )}
+                )}
+              </View>
+            );
+          }}
           right={() => (
             <View style={styles.itemActionsContainer}>
               <View style={styles.quantityActions}>

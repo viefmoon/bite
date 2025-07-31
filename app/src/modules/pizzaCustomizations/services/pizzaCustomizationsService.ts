@@ -28,6 +28,13 @@ async function findAll(
   };
 }
 
+async function findAllActive(): Promise<PizzaCustomization[]> {
+  const response = await apiClient.get<PizzaCustomization[]>(
+    `${API_PATHS.PIZZA_CUSTOMIZATIONS}/active`,
+  );
+  return response.data;
+}
+
 async function findOne(id: string): Promise<PizzaCustomization> {
   const response = await apiClient.get<PizzaCustomization>(
     API_PATHS.PIZZA_CUSTOMIZATIONS_BY_ID.replace(':id', id),
@@ -64,6 +71,7 @@ async function remove(id: string): Promise<void> {
 
 export const pizzaCustomizationsService = {
   findAll,
+  findAllActive,
   findOne,
   create,
   update,

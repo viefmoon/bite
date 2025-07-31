@@ -22,6 +22,13 @@ export function usePizzaCustomizationsList(
   });
 }
 
+export function usePizzaCustomizationsAllActive() {
+  return useQuery({
+    queryKey: [...PIZZA_CUSTOMIZATIONS_QUERY_KEYS.all, 'active'] as const,
+    queryFn: () => pizzaCustomizationsService.findAllActive(),
+  });
+}
+
 export function usePizzaCustomization(id: string) {
   return useQuery({
     queryKey: PIZZA_CUSTOMIZATIONS_QUERY_KEYS.detail(id),

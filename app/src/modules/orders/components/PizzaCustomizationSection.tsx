@@ -22,7 +22,6 @@ import {
 import { useAppTheme } from '../../../app/styles/theme';
 
 interface PizzaCustomizationSectionProps {
-  // Props desde el hook
   flavors: PizzaCustomization[];
   ingredients: PizzaCustomization[];
   selectedFlavors: SelectedPizzaCustomization[];
@@ -150,7 +149,6 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
     const theme = useAppTheme();
     const styles = useMemo(() => createStyles(theme), [theme]);
 
-    // Returns condicionales al final, después de todos los hooks
     if (loading) {
       return (
         <View style={styles.loadingContainer}>
@@ -167,7 +165,6 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
       return null;
     }
 
-    // Renderizar sección de personalización
     const renderCustomizationSection = (
       half: SelectedPizzaCustomization['half'],
       sectionTitle: string,
@@ -175,7 +172,6 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
     ) => {
       const isExpanded = expandedIngredients[half];
 
-      // Construir el título dinámico con el formato completo
       const getDynamicTitle = () => {
         const customizationsForHalf = selectedPizzaCustomizations.filter(
           (sc) => sc.half === half,
@@ -183,15 +179,11 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
 
         const parts: string[] = [];
 
-        // Agregar el sabor si existe
         if (flavorName) {
           parts.push(flavorName);
         } else if (half !== PIZZA_HALF.FULL) {
-          // Para mitades sin sabor
           parts.push('Sin sabor');
         }
-
-        // Filtrar ingredientes
         const addedIngredients: string[] = [];
         const removedIngredients: string[] = [];
 
@@ -293,10 +285,7 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
                             <View style={styles.ingredientInfoContainer}>
                               <View style={styles.ingredientNameContainer}>
                                 <Text style={styles.ingredientLabel}>
-                                  {ingredient.name}
-                                </Text>
-                                <Text style={styles.toppingValueSmall}>
-                                  ({ingredient.toppingValue})
+                                  {ingredient.name} <Text style={styles.toppingValueSmall}>({ingredient.toppingValue})</Text>
                                 </Text>
                               </View>
                             </View>
@@ -304,13 +293,13 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
                               <View style={styles.actionToggle}>
                                 <Text
                                   style={[
-                                    styles.toggleLabel,
+                                    styles.toggleSymbol,
                                     currentAction ===
                                       CUSTOMIZATION_ACTION.ADD &&
-                                      styles.activeLabel,
+                                      styles.activeSymbol,
                                   ]}
                                 >
-                                  Agregar
+                                  +
                                 </Text>
                                 <Switch
                                   value={
@@ -331,13 +320,13 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
                                 />
                                 <Text
                                   style={[
-                                    styles.toggleLabel,
+                                    styles.toggleSymbol,
                                     currentAction ===
                                       CUSTOMIZATION_ACTION.REMOVE &&
-                                      styles.activeLabel,
+                                      styles.activeSymbol,
                                   ]}
                                 >
-                                  Quitar
+                                  −
                                 </Text>
                               </View>
                             )}
@@ -454,9 +443,7 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
           </Card.Content>
         </Card>
 
-        {/* Secciones de Personalización */}
         {showHalvesMode ? (
-          // Modo mitades (2 sabores o modo manual)
           <>
             {renderCustomizationSection(
               PIZZA_HALF.HALF_1,
@@ -474,7 +461,6 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
             )}
           </>
         ) : (
-          // Modo completo (sin sabores o 1 sabor)
           renderCustomizationSection(
             PIZZA_HALF.FULL,
             'Pizza Completa',
@@ -614,20 +600,26 @@ const createStyles = (theme: any) =>
     actionToggle: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginRight: 8,
+      marginHorizontal: 12,
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: 8,
+      paddingHorizontal: 4,
+      paddingVertical: 2,
     },
-    toggleLabel: {
-      fontSize: 14,
+    toggleSymbol: {
+      fontSize: 16,
       color: theme.colors.onSurfaceVariant,
-      fontWeight: '500',
+      fontWeight: 'bold',
+      minWidth: 16,
+      textAlign: 'center',
     },
-    activeLabel: {
+    activeSymbol: {
       color: theme.colors.primary,
       fontWeight: 'bold',
     },
     switch: {
-      marginHorizontal: 8,
-      transform: [{ scale: 1.2 }],
+      marginHorizontal: 4,
+      transform: [{ scale: 0.9 }],
     },
     priceInfoText: {
       fontSize: 12,
@@ -682,9 +674,7 @@ const createStyles = (theme: any) =>
       alignItems: 'center',
       gap: 6,
     },
-    dynamicMarginBottom: {
-      // Base style for dynamic margin
-    },
+    dynamicMarginBottom: {},
     expandedMarginBottom: {
       marginBottom: 12,
     },
