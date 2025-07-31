@@ -281,6 +281,30 @@ export const useProductCustomization = ({
     [selectedModifiersByGroup, showSnackbar],
   );
 
+  // Función helper para filtrar ingredientes compatibles con el nuevo modo
+  const filterCompatibleIngredients = useCallback(
+    (
+      customizations: SelectedPizzaCustomization[],
+      targetMode: 'FULL' | 'HALVES',
+    ): SelectedPizzaCustomization[] => {
+      return customizations.filter((sc) => {
+        // Mantener todas las customizations que no sean ingredientes
+        const isIngredient = ingredients.some((ing) => ing.id === sc.pizzaCustomizationId);
+        if (!isIngredient) return true;
+
+        // Para ingredientes, filtrar según compatibilidad
+        if (targetMode === 'FULL') {
+          // En modo FULL, solo mantener ingredientes FULL
+          return sc.half === PIZZA_HALF.FULL;
+        } else {
+          // En modo HALVES, solo mantener ingredientes de mitades específicas
+          return sc.half === PIZZA_HALF.HALF_1 || sc.half === PIZZA_HALF.HALF_2;
+        }
+      });
+    },
+    [ingredients],
+  );
+
   // Lógica de manejo de sabores
   const handleFlavorToggle = useCallback(
     (flavorId: string) => {
@@ -309,7 +333,14 @@ export const useProductCustomization = ({
 
         if (remainingFlavors.length === 1) {
           const otherFlavorId = remainingFlavors[0].pizzaCustomizationId;
-          const nonFlavorSelections = remainingFlavorSelections.filter(
+          
+          // Filtrar ingredientes compatibles con el modo FULL
+          const compatibleCustomizations = filterCompatibleIngredients(
+            remainingFlavorSelections,
+            'FULL'
+          );
+
+          const nonFlavorSelections = compatibleCustomizations.filter(
             (sc) =>
               !flavors.some((f) => f.id === sc.pizzaCustomizationId) ||
               sc.action !== CUSTOMIZATION_ACTION.ADD,
@@ -341,14 +372,20 @@ export const useProductCustomization = ({
           return; // No permitir más de 2
         }
 
-        const nonFlavorSelections = selectedPizzaCustomizations.filter(
-          (sc) =>
-            !flavors.some((f) => f.id === sc.pizzaCustomizationId) ||
-            sc.action !== CUSTOMIZATION_ACTION.ADD,
-        );
-
         if (currentFlavors.length === 0) {
           // Primer sabor - va completo o a mitad 1 si está el modo manual
+          const targetMode = manualHalvesMode ? 'HALVES' : 'FULL';
+          const compatibleCustomizations = filterCompatibleIngredients(
+            selectedPizzaCustomizations,
+            targetMode
+          );
+
+          const nonFlavorSelections = compatibleCustomizations.filter(
+            (sc) =>
+              !flavors.some((f) => f.id === sc.pizzaCustomizationId) ||
+              sc.action !== CUSTOMIZATION_ACTION.ADD,
+          );
+
           if (manualHalvesMode) {
             const newCustomizations = [
               ...nonFlavorSelections,
@@ -378,6 +415,18 @@ export const useProductCustomization = ({
           // Segundo sabor - convertir a mitades
           const existingFlavor = currentFlavors[0];
 
+          // Filtrar ingredientes compatibles con el modo HALVES
+          const compatibleCustomizations = filterCompatibleIngredients(
+            selectedPizzaCustomizations,
+            'HALVES'
+          );
+
+          const nonFlavorSelections = compatibleCustomizations.filter(
+            (sc) =>
+              !flavors.some((f) => f.id === sc.pizzaCustomizationId) ||
+              sc.action !== CUSTOMIZATION_ACTION.ADD,
+          );
+
           // Crear las nuevas customizaciones como mitades
           const newCustomizations = [
             ...nonFlavorSelections,
@@ -399,7 +448,7 @@ export const useProductCustomization = ({
         }
       }
     },
-    [selectedPizzaCustomizations, flavors, manualHalvesMode],
+    [selectedPizzaCustomizations, flavors, manualHalvesMode, filterCompatibleIngredients],
   );
 
   // Lógica de manejo de ingredientes

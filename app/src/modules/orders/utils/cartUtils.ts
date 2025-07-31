@@ -77,13 +77,13 @@ const arePizzaCustomizationsEqual = (
   if (customizations1.length !== customizations2.length) return false;
 
   const sorted1 = [...customizations1].sort((a, b) =>
-    `${a.pizzaCustomizationId}-${a.half}-${a.action}`.localeCompare(
-      `${b.pizzaCustomizationId}-${b.half}-${b.action}`,
+    `${a.pizzaCustomizationId || ''}-${a.half || ''}-${a.action || ''}`.localeCompare(
+      `${b.pizzaCustomizationId || ''}-${b.half || ''}-${b.action || ''}`,
     ),
   );
   const sorted2 = [...customizations2].sort((a, b) =>
-    `${a.pizzaCustomizationId}-${a.half}-${a.action}`.localeCompare(
-      `${b.pizzaCustomizationId}-${b.half}-${b.action}`,
+    `${a.pizzaCustomizationId || ''}-${a.half || ''}-${a.action || ''}`.localeCompare(
+      `${b.pizzaCustomizationId || ''}-${b.half || ''}-${b.action || ''}`,
     ),
   );
 

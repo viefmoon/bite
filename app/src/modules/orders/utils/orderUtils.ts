@@ -309,7 +309,11 @@ export const prepareOrderForBackend = (
                 }))
               : undefined,
           selectedPizzaCustomizations:
-            item.selectedPizzaCustomizations || undefined,
+            item.selectedPizzaCustomizations?.map((customization) => ({
+              pizzaCustomizationId: customization.pizzaCustomizationId,
+              half: customization.half,
+              action: customization.action,
+            })) || undefined,
         });
       }
     } else {
@@ -330,7 +334,11 @@ export const prepareOrderForBackend = (
                 }))
               : undefined,
           selectedPizzaCustomizations:
-            item.selectedPizzaCustomizations || undefined,
+            item.selectedPizzaCustomizations?.map((customization) => ({
+              pizzaCustomizationId: customization.pizzaCustomizationId,
+              half: customization.half,
+              action: customization.action,
+            })) || undefined,
         });
       }
     }

@@ -17,19 +17,26 @@ const normalizeCartItems = (items: any[]) => {
           name: mod.name,
           price: mod.price || 0,
         }))
-        .sort((a: any, b: any) => a.id.localeCompare(b.id)),
+        .sort((a: any, b: any) => (a.id || '').localeCompare(b.id || '')),
       selectedPizzaCustomizations: (item.selectedPizzaCustomizations || [])
         .map((cust: any) => ({
           id: cust.id,
-          name: cust.name,
-          extraCost: cust.extraCost || 0,
+          pizzaCustomizationId: cust.pizzaCustomizationId,
+          half: cust.half,
+          action: cust.action,
+          name: cust.name || cust.pizzaCustomization?.name,
+          extraCost: cust.extraCost || cust.pizzaCustomization?.toppingValue || 0,
         }))
-        .sort((a: any, b: any) => a.id.localeCompare(b.id)),
-      pizzaExtraCost: item.pizzaExtraCost || 0,
+        .sort((a: any, b: any) => 
+          `${a.pizzaCustomizationId || ''}-${a.half || ''}-${a.action || ''}`.localeCompare(
+            `${b.pizzaCustomizationId || ''}-${b.half || ''}-${b.action || ''}`
+          )
+        ),
+      pizzaExtraCost: item.pizzaExtraCost ?? 0,
     }))
     .sort((a, b) =>
-      `${a.productId}-${a.variantId}`.localeCompare(
-        `${b.productId}-${b.variantId}`,
+      `${a.productId || ''}-${a.variantId || ''}`.localeCompare(
+        `${b.productId || ''}-${b.variantId || ''}`,
       ),
     );
 };
@@ -65,19 +72,33 @@ const normalizeOriginalItems = (items: any[]) => {
     const pizzaCustomizations = (item.selectedPizzaCustomizations || [])
       .map((cust: any) => ({
         id: cust.id,
-        name: cust.name,
-        extraCost: cust.extraCost || 0,
+        pizzaCustomizationId: cust.pizzaCustomizationId,
+        half: cust.half,
+        action: cust.action,
+        name: cust.name || cust.pizzaCustomization?.name,
+        extraCost: cust.extraCost || cust.pizzaCustomization?.toppingValue || 0,
       }))
-      .sort((a: any, b: any) => a.id.localeCompare(b.id));
+      .sort((a: any, b: any) => 
+        `${a.pizzaCustomizationId || ''}-${a.half || ''}-${a.action || ''}`.localeCompare(
+          `${b.pizzaCustomizationId || ''}-${b.half || ''}-${b.action || ''}`
+        )
+      );
+
+    // Calcular pizzaExtraCost de la misma manera que en useOrderManagement
+    const modifiersPrice = modifiers.reduce((sum, mod) => sum + (mod.price || 0), 0);
+    const calculatedPizzaExtraCost = Math.max(
+      0,
+      (item.finalPrice || 0) - (item.basePrice || 0) - modifiersPrice,
+    );
 
     // Crear clave de agrupación más simple
     const key = JSON.stringify({
       productId: item.productId,
       variantId: item.productVariantId || null,
       preparationNotes: item.preparationNotes || '',
-      modifiers: modifiers.sort((a, b) => a.id.localeCompare(b.id)),
+      modifiers: modifiers.sort((a, b) => (a.id || '').localeCompare(b.id || '')),
       pizzaCustomizations,
-      pizzaExtraCost: item.pizzaExtraCost || 0,
+      pizzaExtraCost: calculatedPizzaExtraCost,
     });
 
     if (!groupedItems[key]) {
@@ -102,8 +123,8 @@ const normalizeOriginalItems = (items: any[]) => {
       };
     })
     .sort((a, b) =>
-      `${a.productId}-${a.variantId}`.localeCompare(
-        `${b.productId}-${b.variantId}`,
+      `${a.productId || ''}-${a.variantId || ''}`.localeCompare(
+        `${b.productId || ''}-${b.variantId || ''}`,
       ),
     );
 };
@@ -132,7 +153,7 @@ const deepCompareAdjustments = (
         value: adj.value || 0,
         amount: adj.amount || 0,
       }))
-      .sort((a, b) => a.id.localeCompare(b.id));
+      .sort((a, b) => (a.id || '').localeCompare(b.id || ''));
 
   return JSON.stringify(normalize(adj1)) === JSON.stringify(normalize(adj2));
 };

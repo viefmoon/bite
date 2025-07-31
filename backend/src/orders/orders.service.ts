@@ -1204,46 +1204,39 @@ export class OrdersService {
         )
       : existingOrderItem.productModifiers;
 
-    // Manejar las personalizaciones de pizza de manera inteligente
-    if (updateOrderItemDto.selectedPizzaCustomizations !== undefined) {
-      const existingCustomizations =
-        existingOrderItem.selectedPizzaCustomizations || [];
-      const newCustomizations = updateOrderItemDto.selectedPizzaCustomizations;
-
-      // Crear un mapa de las personalizaciones existentes para reutilizar IDs cuando sea posible
-      const existingMap = new Map(
-        existingCustomizations.map((c) => [
-          `${c.pizzaCustomizationId}-${c.half}-${c.action}`,
-          c.id,
-        ]),
-      );
-
-      // Mapear las nuevas personalizaciones, reutilizando IDs cuando sea posible
-      updatedOrderItem.selectedPizzaCustomizations = newCustomizations.map(
-        (customization) => {
-          const key = `${customization.pizzaCustomizationId}-${customization.half}-${customization.action}`;
-          const existingId = existingMap.get(key);
-
-          return {
-            id: existingId || uuidv4(), // Reutilizar ID si existe una personalización idéntica
-            orderItemId: updatedOrderItem.id,
-            pizzaCustomizationId: customization.pizzaCustomizationId,
-            half: customization.half,
-            action: customization.action,
-          } as any;
-        },
-      );
-    } else {
-      // Si no se proporcionan, mantener las existentes
-      updatedOrderItem.selectedPizzaCustomizations =
-        existingOrderItem.selectedPizzaCustomizations;
-    }
+    // Manejar las personalizaciones de pizza manualmente
+    // No asignar las pizza customizations al updatedOrderItem aún
+    // Las manejaremos después del save principal
+    const newPizzaCustomizations = updateOrderItemDto.selectedPizzaCustomizations;
 
     updatedOrderItem.createdAt = existingOrderItem.createdAt;
     // updatedAt y deletedAt serán manejados por TypeORM o el repositorio
     updatedOrderItem.deletedAt = existingOrderItem.deletedAt;
 
-    return this.orderItemRepository.update(updatedOrderItem);
+    // Actualizar el order item sin las pizza customizations primero
+    const savedOrderItem = await this.orderItemRepository.update(updatedOrderItem);
+
+    // Manejar pizza customizations manualmente si se proporcionaron
+    if (newPizzaCustomizations !== undefined) {
+      // Eliminar todas las pizza customizations existentes
+      await this.orderItemRepository.deletePizzaCustomizations(savedOrderItem.id);
+
+      // Crear las nuevas pizza customizations si hay alguna
+      if (newPizzaCustomizations.length > 0) {
+        const customizationsToCreate = newPizzaCustomizations.map((customization) => ({
+          id: uuidv4(),
+          orderItemId: savedOrderItem.id,
+          pizzaCustomizationId: customization.pizzaCustomizationId,
+          half: customization.half,
+          action: customization.action,
+        }));
+
+        await this.orderItemRepository.createPizzaCustomizations(customizationsToCreate);
+      }
+    }
+
+    // Recargar el order item con las nuevas relaciones
+    return this.findOrderItemById(savedOrderItem.id);
   }
 
   async deleteOrderItem(id: string): Promise<void> {

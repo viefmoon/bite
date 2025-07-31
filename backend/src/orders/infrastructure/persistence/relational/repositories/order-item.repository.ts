@@ -139,4 +139,24 @@ export class OrderItemRelationalRepository implements OrderItemRepository {
   async delete(id: string): Promise<void> {
     await this.orderItemRepository.softDelete(id);
   }
+
+  async deletePizzaCustomizations(orderItemId: string): Promise<void> {
+    await this.orderItemRepository
+      .createQueryBuilder()
+      .delete()
+      .from('selected_pizza_customization')
+      .where('order_item_id = :orderItemId', { orderItemId })
+      .execute();
+  }
+
+  async createPizzaCustomizations(customizations: any[]): Promise<void> {
+    if (customizations.length === 0) return;
+
+    await this.orderItemRepository
+      .createQueryBuilder()
+      .insert()
+      .into('selected_pizza_customization')
+      .values(customizations)
+      .execute();
+  }
 }

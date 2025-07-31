@@ -121,13 +121,13 @@ const AddProductsToOrderScreen = () => {
 
         const sortedExistingCustomizations = [...existingCustomizations].sort(
           (a, b) =>
-            `${a.pizzaCustomizationId}-${a.half}-${a.action}`.localeCompare(
-              `${b.pizzaCustomizationId}-${b.half}-${b.action}`,
+            `${a.pizzaCustomizationId || ''}-${a.half || ''}-${a.action || ''}`.localeCompare(
+              `${b.pizzaCustomizationId || ''}-${b.half || ''}-${b.action || ''}`,
             ),
         );
         const sortedNewCustomizations = [...newCustomizations].sort((a, b) =>
-          `${a.pizzaCustomizationId}-${a.half}-${a.action}`.localeCompare(
-            `${b.pizzaCustomizationId}-${b.half}-${b.action}`,
+          `${a.pizzaCustomizationId || ''}-${a.half || ''}-${a.action || ''}`.localeCompare(
+            `${b.pizzaCustomizationId || ''}-${b.half || ''}-${b.action || ''}`,
           ),
         );
 

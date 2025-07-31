@@ -6,4 +6,6 @@ export interface OrderItemRepository {
   save(orderItem: OrderItem): Promise<OrderItem>;
   update(orderItem: OrderItem): Promise<OrderItem>;
   delete(id: string): Promise<void>;
+  deletePizzaCustomizations(orderItemId: string): Promise<void>;
+  createPizzaCustomizations(customizations: any[]): Promise<void>;
 }
