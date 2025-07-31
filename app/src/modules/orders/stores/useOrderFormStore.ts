@@ -190,10 +190,10 @@ interface OrderFormState {
   setOriginalState: (state: any) => void;
 }
 
-export const useOrderFormStore = create<OrderFormState>((set, get) => ({
+const initialState = {
   id: null,
   isEditMode: false,
-  orderType: OrderTypeEnum.DINE_IN,
+  orderType: OrderTypeEnum.DINE_IN as OrderType,
   selectedAreaId: null,
   selectedTableId: null,
   isTemporaryTable: false,
@@ -207,6 +207,10 @@ export const useOrderFormStore = create<OrderFormState>((set, get) => ({
   prepaymentMethod: null,
   orderDataLoaded: false,
   originalState: null,
+};
+
+export const useOrderFormStore = create<OrderFormState>((set, get) => ({
+  ...initialState,
 
   setOrderType: (type: OrderType) => {
     set((state) => {
@@ -336,24 +340,7 @@ export const useOrderFormStore = create<OrderFormState>((set, get) => ({
   },
 
   resetForm: () => {
-    set({
-      id: null,
-      isEditMode: false,
-      orderType: OrderTypeEnum.DINE_IN,
-      selectedAreaId: null,
-      selectedTableId: null,
-      isTemporaryTable: false,
-      temporaryTableName: '',
-      scheduledTime: null,
-      deliveryInfo: {},
-      orderNotes: '',
-      adjustments: [],
-      prepaymentId: null,
-      prepaymentAmount: '',
-      prepaymentMethod: null,
-      orderDataLoaded: false,
-      originalState: null,
-    });
+    set(initialState);
   },
 
   setOriginalState: (orderData: any) => {

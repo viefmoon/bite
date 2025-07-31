@@ -11,10 +11,14 @@ interface OrderUIState {
   resetUI: () => void;
 }
 
-export const useOrderUIStore = create<OrderUIState>((set) => ({
+const initialState = {
   isCartVisible: false,
   isLoading: false,
   isConfirming: false,
+};
+
+export const useOrderUIStore = create<OrderUIState>((set) => ({
+  ...initialState,
 
   showCart: () => {
     set({ isCartVisible: true });
@@ -33,10 +37,6 @@ export const useOrderUIStore = create<OrderUIState>((set) => ({
   },
 
   resetUI: () => {
-    set({
-      isCartVisible: false,
-      isLoading: false,
-      isConfirming: false,
-    });
+    set(initialState);
   },
 }));

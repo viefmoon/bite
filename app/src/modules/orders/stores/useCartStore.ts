@@ -39,8 +39,12 @@ interface CartState {
   resetCart: () => void;
 }
 
-export const useCartStore = create<CartState>((set, get) => ({
+const initialState = {
   items: [],
+};
+
+export const useCartStore = create<CartState>((set, get) => ({
+  ...initialState,
 
   addItem: (
     product: Product,
@@ -111,7 +115,7 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
 
   resetCart: () => {
-    set({ items: [] });
+    set(initialState);
   },
 }));
 
