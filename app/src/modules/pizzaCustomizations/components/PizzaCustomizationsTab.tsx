@@ -10,7 +10,10 @@ import {
 } from 'react-native-paper';
 import { FlashList } from '@shopify/flash-list';
 import { useAppTheme } from '@/app/styles/theme';
-import { ThemeDropdown, type DropdownOption } from '@/app/components/common/ThemeDropdown';
+import {
+  ThemeDropdown,
+  type DropdownOption,
+} from '@/app/components/common/ThemeDropdown';
 import {
   usePizzaCustomizationsList,
   useDeletePizzaCustomization,
@@ -36,7 +39,11 @@ export function PizzaCustomizationsTab() {
   const typeOptions: DropdownOption[] = [
     { id: 'all', label: 'Todas', icon: 'filter-variant' },
     { id: CustomizationTypeEnum.FLAVOR, label: 'Sabores', icon: 'pizza' },
-    { id: CustomizationTypeEnum.INGREDIENT, label: 'Ingredientes', icon: 'cheese' },
+    {
+      id: CustomizationTypeEnum.INGREDIENT,
+      label: 'Ingredientes',
+      icon: 'cheese',
+    },
   ];
   const [selectedCustomization, setSelectedCustomization] =
     useState<PizzaCustomization | null>(null);
@@ -320,7 +327,9 @@ export function PizzaCustomizationsTab() {
               label="Tipo"
               value={selectedType}
               options={typeOptions}
-              onSelect={(option) => setSelectedType(option.id as CustomizationType | 'all')}
+              onSelect={(option) =>
+                setSelectedType(option.id as CustomizationType | 'all')
+              }
               placeholder="Selecciona tipo"
             />
           </View>

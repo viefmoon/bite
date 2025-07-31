@@ -116,7 +116,9 @@ const deepCompareCartItems = (
   const normalizedCurrent = normalizeCartItems(currentItems);
   const normalizedOriginal = normalizeCartItems(originalItems); // Los originales ya están normalizados al guardarlos
 
-  return JSON.stringify(normalizedCurrent) === JSON.stringify(normalizedOriginal);
+  return (
+    JSON.stringify(normalizedCurrent) === JSON.stringify(normalizedOriginal)
+  );
 };
 
 // Función para comparación profunda de ajustes
@@ -334,7 +336,6 @@ export const useOrderFormStore = create<OrderFormState>((set, get) => ({
   setEditMode: (isEdit: boolean, orderId?: string | null) => {
     set({ isEditMode: isEdit, id: orderId || null });
   },
-
 
   resetForm: () => {
     set({

@@ -10,7 +10,10 @@ import {
   useCreatePaymentMutation,
   useDeletePaymentMutation,
 } from './usePaymentQueries';
-import { useCompleteOrderMutation, useGetOrderByIdQuery } from './useOrdersQueries';
+import {
+  useCompleteOrderMutation,
+  useGetOrderByIdQuery,
+} from './useOrdersQueries';
 import { prepaymentService } from '@/modules/payments/services/prepaymentService';
 
 interface UsePaymentModalProps {
@@ -31,7 +34,7 @@ export const usePaymentModal = ({
   onPaymentRegistered,
 }: UsePaymentModalProps) => {
   const queryClient = useQueryClient();
-  
+
   // Estado del formulario
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>(
     PaymentMethodEnum.CASH,
@@ -47,14 +50,19 @@ export const usePaymentModal = ({
     useState(false);
 
   // Consultar payments actualizados directamente de la orden
-  const { data: orderData, isLoading: isLoadingPayments } = useGetOrderByIdQuery(orderId, {
-    enabled: !!orderId && visible && mode === 'payment',
-  });
+  const { data: orderData, isLoading: isLoadingPayments } =
+    useGetOrderByIdQuery(orderId, {
+      enabled: !!orderId && visible && mode === 'payment',
+    });
 
   // Usar payments actualizados como única fuente de verdad
   const payments = useMemo(() => {
-    if (mode === 'payment' && orderData?.payments && Array.isArray(orderData.payments)) {
-      return orderData.payments.map(payment => ({
+    if (
+      mode === 'payment' &&
+      orderData?.payments &&
+      Array.isArray(orderData.payments)
+    ) {
+      return orderData.payments.map((payment) => ({
         id: payment.id,
         amount: payment.amount,
         paymentMethod: payment.paymentMethod,
@@ -66,7 +74,7 @@ export const usePaymentModal = ({
     }
     return [];
   }, [mode, orderData?.payments]);
-  
+
   // Mutations
   const createPaymentMutation = useCreatePaymentMutation();
   const deletePaymentMutation = useDeletePaymentMutation();
@@ -185,17 +193,17 @@ export const usePaymentModal = ({
     if (!paymentToDelete) return;
 
     await deletePaymentMutation.mutateAsync(paymentToDelete);
-    
+
     // Actualizar datos
     if (orderId) {
       queryClient.invalidateQueries({
         queryKey: ['orders', 'detail', orderId],
       });
     }
-    
+
     setShowDeleteConfirm(false);
     setPaymentToDelete(null);
-    
+
     if (onPaymentRegistered) {
       onPaymentRegistered();
     }

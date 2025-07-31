@@ -1,8 +1,6 @@
 import { paymentService } from '../services/paymentService';
 import { useApiMutation } from '@/app/hooks/useApiMutation';
-import type {
-  CreatePaymentDto,
-} from '../schema/payment.schema';
+import type { CreatePaymentDto } from '../schema/payment.schema';
 
 // Query Keys (simplificado - solo para mutaciones)
 export const paymentKeys = {

@@ -25,10 +25,14 @@ export const CategoryQuickAccess = memo<CategoryQuickAccessProps>(
           },
           scrollContent: {
             flexDirection: 'row',
+            flexWrap: 'wrap',
             alignItems: 'center',
             gap: theme.spacing.xs,
           },
-          categoryChip: {},
+          categoryChip: {
+            flexBasis: '23%',
+            maxWidth: '23%',
+          },
           categoryChipInner: {
             paddingHorizontal: theme.spacing.m,
             paddingVertical: theme.spacing.s,
@@ -61,9 +65,6 @@ export const CategoryQuickAccess = memo<CategoryQuickAccessProps>(
           categoryTextInactive: {
             color: theme.colors.onSurfaceDisabled,
           },
-          flexOne: {
-            flex: 1,
-          },
         }),
       [theme],
     );
@@ -77,50 +78,43 @@ export const CategoryQuickAccess = memo<CategoryQuickAccessProps>(
       return null;
     }
 
-    const categoryRows = [];
-    for (let i = 0; i < activeCategories.length; i += 4) {
-      categoryRows.push(activeCategories.slice(i, i + 4));
-    }
-
     return (
       <View style={styles.container}>
-        {categoryRows.map((row, rowIndex) => (
-          <View key={rowIndex} style={styles.scrollContent}>
-            {row.map((category) => {
-              const isSelected = category.id === selectedCategoryId;
-              const isInactive = category.isActive === false;
+        <View style={styles.scrollContent}>
+          {activeCategories.map((category) => {
+            const isSelected = category.id === selectedCategoryId;
+            const isInactive = category.isActive === false;
 
-              return (
-                <Pressable
-                  key={category.id}
-                  style={[styles.categoryChip, styles.flexOne]}
-                  onPress={() => !isInactive && onCategorySelect(category.id)}
-                  disabled={isInactive}
+            return (
+              <Pressable
+                key={category.id}
+                style={styles.categoryChip}
+                onPress={() => !isInactive && onCategorySelect(category.id)}
+                disabled={isInactive}
+              >
+                <View
+                  style={[
+                    styles.categoryChipInner,
+                    isSelected && styles.categoryChipSelected,
+                    isInactive && styles.categoryChipInactive,
+                  ]}
                 >
-                  <View
+                  <Text
                     style={[
-                      styles.categoryChipInner,
-                      isSelected && styles.categoryChipSelected,
-                      isInactive && styles.categoryChipInactive,
+                      styles.categoryText,
+                      isSelected && styles.categoryTextSelected,
+                      isInactive && styles.categoryTextInactive,
                     ]}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
                   >
-                    <Text
-                      style={[
-                        styles.categoryText,
-                        isSelected && styles.categoryTextSelected,
-                        isInactive && styles.categoryTextInactive,
-                      ]}
-                      numberOfLines={1}
-                      ellipsizeMode="tail"
-                    >
-                      {category.name}
-                    </Text>
-                  </View>
-                </Pressable>
-              );
-            })}
-          </View>
-        ))}
+                    {category.name}
+                  </Text>
+                </View>
+              </Pressable>
+            );
+          })}
+        </View>
       </View>
     );
   },

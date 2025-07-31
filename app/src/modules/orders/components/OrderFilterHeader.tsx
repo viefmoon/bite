@@ -17,6 +17,75 @@ interface OrderFilterHeaderProps {
   ) => void;
 }
 
+interface FilterButtonProps {
+  filterType: 'ALL' | 'WHATSAPP' | keyof typeof OrderTypeEnum;
+  icon: string;
+  isActive: boolean;
+  theme: any;
+  styles: any;
+  count: number;
+  onFilterChange: (filterType: 'ALL' | 'WHATSAPP' | keyof typeof OrderTypeEnum) => void;
+}
+
+const FilterButton: React.FC<FilterButtonProps> = ({ 
+  filterType, 
+  icon, 
+  isActive, 
+  theme, 
+  styles, 
+  count, 
+  onFilterChange 
+}) => (
+  <Pressable
+    style={[
+      styles.filterButton,
+      isActive && styles.filterButtonActive,
+      {
+        backgroundColor: isActive
+          ? theme.colors.primaryContainer
+          : theme.colors.surface,
+      },
+    ]}
+    onPress={() => onFilterChange(filterType)}
+  >
+    <Icon
+      source={icon}
+      size={26}
+      color={
+        isActive ? theme.colors.primary : theme.colors.onSurfaceVariant
+      }
+    />
+    {count > 0 && (
+      <View
+        style={[
+          styles.countBadge,
+          {
+            backgroundColor: isActive
+              ? theme.colors.error
+              : theme.colors.errorContainer,
+            borderColor: isActive
+              ? theme.colors.error
+              : theme.colors.outline,
+          },
+        ]}
+      >
+        <Text
+          style={[
+            styles.countBadgeText,
+            {
+              color: isActive
+                ? theme.colors.onError
+                : theme.colors.onErrorContainer,
+            },
+          ]}
+        >
+          {count}
+        </Text>
+      </View>
+    )}
+  </Pressable>
+);
+
 export const OrderFilterHeader: React.FC<OrderFilterHeaderProps> = ({
   selectedOrderType,
   ordersData,
@@ -97,65 +166,6 @@ export const OrderFilterHeader: React.FC<OrderFilterHeaderProps> = ({
     ).length;
   };
 
-  const FilterButton: React.FC<{
-    filterType: 'ALL' | 'WHATSAPP' | keyof typeof OrderTypeEnum;
-    icon: string;
-    isActive: boolean;
-  }> = ({ filterType, icon, isActive }) => {
-    const count = getFilterCount(filterType);
-
-    return (
-      <Pressable
-        style={[
-          styles.filterButton,
-          isActive && styles.filterButtonActive,
-          {
-            backgroundColor: isActive
-              ? theme.colors.primaryContainer
-              : theme.colors.surface,
-          },
-        ]}
-        onPress={() => onFilterChange(filterType)}
-      >
-        <Icon
-          source={icon}
-          size={26}
-          color={
-            isActive ? theme.colors.primary : theme.colors.onSurfaceVariant
-          }
-        />
-        {count > 0 && (
-          <View
-            style={[
-              styles.countBadge,
-              {
-                backgroundColor: isActive
-                  ? theme.colors.error
-                  : theme.colors.errorContainer,
-                borderColor: isActive
-                  ? theme.colors.error
-                  : theme.colors.outline,
-              },
-            ]}
-          >
-            <Text
-              style={[
-                styles.countBadgeText,
-                {
-                  color: isActive
-                    ? theme.colors.onError
-                    : theme.colors.onErrorContainer,
-                },
-              ]}
-            >
-              {count}
-            </Text>
-          </View>
-        )}
-      </Pressable>
-    );
-  };
-
   return (
     <Surface style={styles.header}>
       <View style={styles.headerContent}>
@@ -164,26 +174,46 @@ export const OrderFilterHeader: React.FC<OrderFilterHeaderProps> = ({
             filterType="ALL"
             icon="view-grid"
             isActive={selectedOrderType === 'ALL'}
+            theme={theme}
+            styles={styles}
+            count={getFilterCount('ALL')}
+            onFilterChange={onFilterChange}
           />
           <FilterButton
             filterType={OrderTypeEnum.DINE_IN}
             icon="silverware-fork-knife"
             isActive={selectedOrderType === OrderTypeEnum.DINE_IN}
+            theme={theme}
+            styles={styles}
+            count={getFilterCount(OrderTypeEnum.DINE_IN)}
+            onFilterChange={onFilterChange}
           />
           <FilterButton
             filterType={OrderTypeEnum.TAKE_AWAY}
             icon="bag-personal"
             isActive={selectedOrderType === OrderTypeEnum.TAKE_AWAY}
+            theme={theme}
+            styles={styles}
+            count={getFilterCount(OrderTypeEnum.TAKE_AWAY)}
+            onFilterChange={onFilterChange}
           />
           <FilterButton
             filterType={OrderTypeEnum.DELIVERY}
             icon="moped"
             isActive={selectedOrderType === OrderTypeEnum.DELIVERY}
+            theme={theme}
+            styles={styles}
+            count={getFilterCount(OrderTypeEnum.DELIVERY)}
+            onFilterChange={onFilterChange}
           />
           <FilterButton
             filterType="WHATSAPP"
             icon="whatsapp"
             isActive={selectedOrderType === 'WHATSAPP'}
+            theme={theme}
+            styles={styles}
+            count={getFilterCount('WHATSAPP')}
+            onFilterChange={onFilterChange}
           />
         </View>
       </View>

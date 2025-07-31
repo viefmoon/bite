@@ -44,7 +44,10 @@ import { useGetAreas } from '@/modules/areasTables/hooks/useAreasQueries';
 import { useGetTablesByAreaId } from '@/modules/areasTables/hooks/useTablesQueries';
 import type { Area } from '@/app/schemas/domain/area.schema';
 import type { Table } from '@/app/schemas/domain/table.schema';
-import { ThemeDropdown, type DropdownOption } from '@/app/components/common/ThemeDropdown';
+import {
+  ThemeDropdown,
+  type DropdownOption,
+} from '@/app/components/common/ThemeDropdown';
 import type { DeliveryInfo } from '@/app/schemas/domain/delivery-info.schema';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 
@@ -140,21 +143,23 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
 
   // Opciones para dropdowns
   const areaOptions: DropdownOption[] = useMemo(
-    () => areasData?.map((area: Area) => ({
-      id: area.id,
-      label: area.name,
-    })) || [],
-    [areasData]
+    () =>
+      areasData?.map((area: Area) => ({
+        id: area.id,
+        label: area.name,
+      })) || [],
+    [areasData],
   );
 
   const tableOptions: DropdownOption[] = useMemo(
-    () => tablesData?.map((table: Table) => ({
-      id: table.id,
-      label: table.name,
-      disabled: !table.isAvailable,
-      icon: table.isAvailable ? 'table-furniture' : 'table-furniture-off',
-    })) || [],
-    [tablesData]
+    () =>
+      tablesData?.map((table: Table) => ({
+        id: table.id,
+        label: table.name,
+        disabled: !table.isAvailable,
+        icon: table.isAvailable ? 'table-furniture' : 'table-furniture-off',
+      })) || [],
+    [tablesData],
   );
 
   // Nombres computed para área y mesa
@@ -899,7 +904,10 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
                     loading={isLoadingAreas}
                     disabled={isLoadingAreas}
                     error={!!areaError || !!errorAreas}
-                    helperText={areaError || (errorAreas ? 'Error al cargar áreas' : undefined)}
+                    helperText={
+                      areaError ||
+                      (errorAreas ? 'Error al cargar áreas' : undefined)
+                    }
                     required
                     placeholder="Selecciona un área"
                   />
@@ -923,11 +931,16 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
                     }
                     error={!!tableError || !!errorTables}
                     helperText={
-                      !editableIsTemporaryTable ? (
-                        tableError || (errorTables ? 'Error al cargar mesas' : 
-                        editableSelectedAreaId && tableOptions.length === 0 && !isLoadingTables ? 
-                        'No hay mesas disponibles en esta área' : undefined)
-                      ) : undefined
+                      !editableIsTemporaryTable
+                        ? tableError ||
+                          (errorTables
+                            ? 'Error al cargar mesas'
+                            : editableSelectedAreaId &&
+                                tableOptions.length === 0 &&
+                                !isLoadingTables
+                              ? 'No hay mesas disponibles en esta área'
+                              : undefined)
+                        : undefined
                     }
                     required
                     placeholder="Selecciona una mesa"

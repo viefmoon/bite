@@ -55,12 +55,12 @@ export const useUpdateOrderMutation = () => {
         queryClient.invalidateQueries({
           queryKey: [...orderKeys.details(), variables.orderId],
         });
-        
+
         // Invalidar específicamente la lista de órdenes abiertas
         queryClient.invalidateQueries({
           queryKey: orderKeys.openOrdersList(),
         });
-        
+
         // Invalidar todas las listas de órdenes
         queryClient.invalidateQueries({
           queryKey: orderKeys.lists(),

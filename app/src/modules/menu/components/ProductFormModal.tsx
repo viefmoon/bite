@@ -37,7 +37,10 @@ import CustomImagePicker, {
   FileObject,
 } from '@/app/components/common/CustomImagePicker';
 import { ImageUploadService } from '@/app/lib/imageUploadService';
-import { ThemeDropdown, type DropdownOption } from '@/app/components/common/ThemeDropdown';
+import {
+  ThemeDropdown,
+  type DropdownOption,
+} from '@/app/components/common/ThemeDropdown';
 import { useModifierGroupsQuery } from '../../modifiers/hooks/useModifierGroupsQuery';
 import { modifierService } from '../../modifiers/services/modifierService';
 import { useGetPreparationScreens } from '../../preparationScreens/hooks/usePreparationScreensQueries';
@@ -143,13 +146,12 @@ const useProductFormLogic = ({
   // Queries para datos asíncronos
   const { data: modifierGroups, isLoading: isLoadingGroups } =
     useModifierGroupsQuery({ isActive: true });
-    
+
   const { data: preparationScreensResponse } = useGetPreparationScreens(
     {},
     { page: 1, limit: 50 },
   );
   const preparationScreens = preparationScreensResponse?.data || [];
-
 
   const allModifierGroups = useMemo(
     () => modifierGroups || [],
@@ -158,11 +160,12 @@ const useProductFormLogic = ({
 
   // Opciones para el dropdown de pantallas de preparación
   const preparationScreenOptions: DropdownOption[] = useMemo(
-    () => preparationScreens.map((screen) => ({
-      id: screen.id,
-      label: screen.name,
-    })),
-    [preparationScreens]
+    () =>
+      preparationScreens.map((screen) => ({
+        id: screen.id,
+        label: screen.name,
+      })),
+    [preparationScreens],
   );
 
   // Watchers del formulario

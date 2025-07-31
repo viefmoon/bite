@@ -47,18 +47,15 @@ export const ThemeDropdown: React.FC<ThemeDropdownProps> = ({
 }) => {
   const theme = useAppTheme();
   const [visible, setVisible] = useState(false);
-  
+
   const selectedOption = options.find((option) => option.id === value);
   const displayValue = selectedOption?.label || '';
-  
-  const styles = useMemo(
-    () => createStyles(theme),
-    [theme]
-  );
+
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   const handleOpen = useCallback(() => {
     if (disabled || loading) return;
-    
+
     if (onOpen) {
       onOpen();
     }
@@ -69,18 +66,21 @@ export const ThemeDropdown: React.FC<ThemeDropdownProps> = ({
     setVisible(false);
   }, []);
 
-  const handleSelect = useCallback((option: DropdownOption) => {
-    if (option.disabled) return;
-    
-    onSelect(option);
-    setVisible(false);
-  }, [onSelect]);
+  const handleSelect = useCallback(
+    (option: DropdownOption) => {
+      if (option.disabled) return;
+
+      onSelect(option);
+      setVisible(false);
+    },
+    [onSelect],
+  );
 
   const borderColor = error
     ? theme.colors.error
     : disabled
-    ? theme.colors.outline
-    : theme.colors.primary;
+      ? theme.colors.outline
+      : theme.colors.primary;
 
   return (
     <View style={styles.container}>
@@ -94,8 +94,8 @@ export const ThemeDropdown: React.FC<ThemeDropdownProps> = ({
               styles.inputContainer,
               {
                 borderColor,
-                backgroundColor: disabled 
-                  ? theme.colors.surfaceDisabled 
+                backgroundColor: disabled
+                  ? theme.colors.surfaceDisabled
                   : theme.colors.surface,
               },
             ]}
@@ -104,14 +104,21 @@ export const ThemeDropdown: React.FC<ThemeDropdownProps> = ({
             activeOpacity={0.7}
           >
             <View style={styles.labelContainer}>
-              <Text style={[
-                styles.label,
-                { color: error ? theme.colors.error : theme.colors.onSurfaceVariant }
-              ]}>
-                {label}{required && ' *'}
+              <Text
+                style={[
+                  styles.label,
+                  {
+                    color: error
+                      ? theme.colors.error
+                      : theme.colors.onSurfaceVariant,
+                  },
+                ]}
+              >
+                {label}
+                {required && ' *'}
               </Text>
             </View>
-            
+
             <View style={styles.valueContainer}>
               <Text
                 style={[
@@ -120,15 +127,15 @@ export const ThemeDropdown: React.FC<ThemeDropdownProps> = ({
                     color: disabled
                       ? theme.colors.onSurfaceDisabled
                       : displayValue
-                      ? theme.colors.onSurface
-                      : theme.colors.onSurfaceVariant,
+                        ? theme.colors.onSurface
+                        : theme.colors.onSurfaceVariant,
                   },
                 ]}
                 numberOfLines={1}
               >
                 {loading ? '' : displayValue || placeholder}
               </Text>
-              
+
               <View style={styles.iconContainer}>
                 {loading ? (
                   <ActivityIndicator
@@ -151,8 +158,8 @@ export const ThemeDropdown: React.FC<ThemeDropdownProps> = ({
           </TouchableOpacity>
         }
       >
-        <ScrollView 
-          style={styles.scrollView} 
+        <ScrollView
+          style={styles.scrollView}
           showsVerticalScrollIndicator={true}
           persistentScrollbar={true}
         >
@@ -172,7 +179,7 @@ export const ThemeDropdown: React.FC<ThemeDropdownProps> = ({
                 titleStyle={[
                   styles.menuItemTitle,
                   option.disabled && { color: theme.colors.onSurfaceDisabled },
-                  option.id === value && { 
+                  option.id === value && {
                     color: theme.colors.primary,
                     fontWeight: '600',
                   },
@@ -188,7 +195,7 @@ export const ThemeDropdown: React.FC<ThemeDropdownProps> = ({
           )}
         </ScrollView>
       </Menu>
-      
+
       {helperText && (
         <HelperText
           type={error ? 'error' : 'info'}

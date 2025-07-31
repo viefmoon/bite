@@ -20,7 +20,6 @@ export const useOrderManagement = () => {
   const formStore = useOrderFormStore();
   const uiStore = useOrderUIStore();
 
-
   const loadOrderForEditing = (orderData: any) => {
     // Reset states first
     cartStore.resetCart();
@@ -322,7 +321,6 @@ export const useOrderManagement = () => {
     formStore.resetForm();
     uiStore.resetUI();
   };
-
 
   return {
     // Cart actions

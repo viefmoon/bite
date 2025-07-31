@@ -138,7 +138,6 @@ const useOrderCart = ({
     enabled: isEditMode && !!orderId && visible,
   });
 
-
   const { data: editingProduct, isLoading: isLoadingEditingProduct } =
     useProductQuery(editingItemProductId || '', {
       enabled: !!editingItemProductId,
@@ -158,11 +157,14 @@ const useOrderCart = ({
     return { discounts, charges, total: charges - discounts };
   }, [adjustments]);
 
-
   // Cálculos simples para mostrar totales en la UI
-  const totalPaid = isEditMode && orderData?.payments 
-    ? orderData.payments.reduce((sum, payment) => sum + (payment.amount || 0), 0)
-    : 0;
+  const totalPaid =
+    isEditMode && orderData?.payments
+      ? orderData.payments.reduce(
+          (sum, payment) => sum + (payment.amount || 0),
+          0,
+        )
+      : 0;
   const pendingAmount = total - totalPaid;
 
   const canRegisterPayments = useMemo(() => {
@@ -585,6 +587,7 @@ const useOrderCart = ({
     theme,
   };
 };
+
 const OrderFormSection: React.FC<{
   orderType: OrderType;
   dineInFormRef: React.RefObject<DineInFormRef | null>;
@@ -624,6 +627,7 @@ const OrderFormSection: React.FC<{
       return null;
   }
 };
+
 const OrderCartHeader: React.FC<{
   isEditMode: boolean;
   orderData: any;
@@ -800,6 +804,7 @@ const OrderCartHeader: React.FC<{
     />
   );
 };
+
 const OrderContent: React.FC<{
   orderType: OrderType;
   setOrderType: (type: OrderType) => void;
@@ -1117,6 +1122,7 @@ const OrderContent: React.FC<{
     </ScrollView>
   );
 };
+
 const OrderCartDetail: React.FC<OrderCartDetailProps> = (props) => {
   const {
     visible,
@@ -1363,7 +1369,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = (props) => {
                       }${!isConfirming ? ` - $${total.toFixed(2)}` : ''}`}
                 </Text>
               </Button>
-              
+
               {isEditMode && orderId && visible && (
                 <IconButton
                   icon="cash-multiple"
@@ -1371,7 +1377,8 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = (props) => {
                   onPress={() => {
                     if (hasUnsavedChanges) {
                       showSnackbar({
-                        message: 'Debes guardar los cambios antes de registrar pagos',
+                        message:
+                          'Debes guardar los cambios antes de registrar pagos',
                         type: 'warning',
                       });
                       return;

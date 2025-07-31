@@ -167,7 +167,6 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     }
   };
 
-
   const handlePrepaymentDeleted = async () => {
     try {
       const success = await handleDeletePrepayment();

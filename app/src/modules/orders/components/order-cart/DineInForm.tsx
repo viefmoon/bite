@@ -7,7 +7,10 @@ import React, {
 } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text, Checkbox, HelperText } from 'react-native-paper';
-import { ThemeDropdown, type DropdownOption } from '@/app/components/common/ThemeDropdown';
+import {
+  ThemeDropdown,
+  type DropdownOption,
+} from '@/app/components/common/ThemeDropdown';
 import AnimatedLabelSelector from '@/app/components/common/AnimatedLabelSelector';
 import SpeechRecognitionInput from '@/app/components/common/SpeechRecognitionInput';
 import { useAppTheme } from '@/app/styles/theme';
@@ -48,7 +51,7 @@ export const DineInForm = forwardRef<DineInFormRef, DineInFormProps>(
       error: errorAreas,
       refetch: refetchAreas,
     } = useGetAreas();
-    
+
     const {
       data: tablesData = [],
       isLoading: isLoadingTables,
@@ -61,35 +64,41 @@ export const DineInForm = forwardRef<DineInFormRef, DineInFormProps>(
     );
 
     // Transformar áreas en opciones para el dropdown
-    const areaOptions: DropdownOption[] = useMemo(() => 
-      areasData.map((area: any) => ({
-        id: area.id,
-        label: area.name,
-        disabled: false,
-      })),
-      [areasData]
+    const areaOptions: DropdownOption[] = useMemo(
+      () =>
+        areasData.map((area: any) => ({
+          id: area.id,
+          label: area.name,
+          disabled: false,
+        })),
+      [areasData],
     );
 
     // Transformar mesas en opciones para el dropdown
-    const tableOptions: DropdownOption[] = useMemo(() => 
-      tablesData.map((table: Table) => {
-        const isCurrentTable = isEditMode && selectedTableId === table.id;
-        const canSelect = table.isAvailable || isCurrentTable;
-        
-        return {
-          id: table.id,
-          label: table.name,
-          subtitle: !table.isAvailable && !isCurrentTable ? 'Ocupada' : undefined,
-          disabled: !canSelect,
-          icon: table.isAvailable || isCurrentTable ? 'table-furniture' : 'table-furniture-off',
-        };
-      }),
-      [tablesData, isEditMode, selectedTableId]
+    const tableOptions: DropdownOption[] = useMemo(
+      () =>
+        tablesData.map((table: Table) => {
+          const isCurrentTable = isEditMode && selectedTableId === table.id;
+          const canSelect = table.isAvailable || isCurrentTable;
+
+          return {
+            id: table.id,
+            label: table.name,
+            subtitle:
+              !table.isAvailable && !isCurrentTable ? 'Ocupada' : undefined,
+            disabled: !canSelect,
+            icon:
+              table.isAvailable || isCurrentTable
+                ? 'table-furniture'
+                : 'table-furniture-off',
+          };
+        }),
+      [tablesData, isEditMode, selectedTableId],
     );
     const formattedScheduledTime = scheduledTime
       ? format(scheduledTime, 'h:mm a').toLowerCase()
       : '';
-    
+
     const theme = useAppTheme();
     const styles = useMemo(() => createStyles(theme), [theme]);
 
@@ -102,19 +111,25 @@ export const DineInForm = forwardRef<DineInFormRef, DineInFormProps>(
       setScheduledTime(null);
     }, [setScheduledTime]);
 
-    const handleAreaSelect = useCallback((option: DropdownOption) => {
-      setSelectedAreaId(option.id);
-      setAreaError(null);
-      // Limpiar selección de mesa cuando se cambia el área
-      if (selectedTableId) {
-        setSelectedTableId(null);
-      }
-    }, [setSelectedAreaId, selectedTableId, setSelectedTableId]);
+    const handleAreaSelect = useCallback(
+      (option: DropdownOption) => {
+        setSelectedAreaId(option.id);
+        setAreaError(null);
+        // Limpiar selección de mesa cuando se cambia el área
+        if (selectedTableId) {
+          setSelectedTableId(null);
+        }
+      },
+      [setSelectedAreaId, selectedTableId, setSelectedTableId],
+    );
 
-    const handleTableSelect = useCallback((option: DropdownOption) => {
-      setSelectedTableId(option.id);
-      setTableError(null);
-    }, [setSelectedTableId]);
+    const handleTableSelect = useCallback(
+      (option: DropdownOption) => {
+        setSelectedTableId(option.id);
+        setTableError(null);
+      },
+      [setSelectedTableId],
+    );
 
     const handleAreaOpen = useCallback(() => {
       if (refetchAreas) {
@@ -135,7 +150,10 @@ export const DineInForm = forwardRef<DineInFormRef, DineInFormProps>(
     }, [selectedAreaId, areaError]);
 
     React.useEffect(() => {
-      if ((selectedTableId || (isTemporaryTable && temporaryTableName)) && tableError) {
+      if (
+        (selectedTableId || (isTemporaryTable && temporaryTableName)) &&
+        tableError
+      ) {
         setTableError(null);
       }
     }, [selectedTableId, isTemporaryTable, temporaryTableName, tableError]);
@@ -182,7 +200,9 @@ export const DineInForm = forwardRef<DineInFormRef, DineInFormProps>(
               loading={isLoadingAreas}
               disabled={isLoadingAreas}
               error={!!areaError || !!errorAreas}
-              helperText={areaError || (errorAreas ? 'Error al cargar áreas' : undefined)}
+              helperText={
+                areaError || (errorAreas ? 'Error al cargar áreas' : undefined)
+              }
               required
               placeholder="Selecciona un área"
             />
@@ -204,11 +224,16 @@ export const DineInForm = forwardRef<DineInFormRef, DineInFormProps>(
               }
               error={!!tableError || !!errorTables}
               helperText={
-                !isTemporaryTable ? (
-                  tableError || (errorTables ? 'Error al cargar mesas' : 
-                  selectedAreaId && tableOptions.length === 0 && !isLoadingTables ? 
-                  'No hay mesas disponibles en esta área' : undefined)
-                ) : undefined
+                !isTemporaryTable
+                  ? tableError ||
+                    (errorTables
+                      ? 'Error al cargar mesas'
+                      : selectedAreaId &&
+                          tableOptions.length === 0 &&
+                          !isLoadingTables
+                        ? 'No hay mesas disponibles en esta área'
+                        : undefined)
+                  : undefined
               }
               required
               placeholder="Selecciona una mesa"
