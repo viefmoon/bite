@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { areCartItemsEqual } from '../utils/cartUtils';
 import {
   useCartStore,
@@ -6,7 +5,7 @@ import {
   useCartItemsCount,
   useIsCartEmpty,
 } from './useCartStore';
-import { useOrderFormStore } from './useOrderFormStore';
+import { useOrderFormStore, useHasUnsavedChanges } from './useOrderFormStore';
 import { useOrderUIStore } from './useOrderUIStore';
 import {
   validateOrderForConfirmation,
@@ -21,35 +20,6 @@ export const useOrderManagement = () => {
   const formStore = useOrderFormStore();
   const uiStore = useOrderUIStore();
 
-  // Auto-check for unsaved changes when cart items change
-  useEffect(() => {
-    if (formStore.isEditMode && formStore.originalState) {
-      formStore.checkForUnsavedChanges(cartStore.items);
-    }
-  }, [cartStore.items, formStore.isEditMode, formStore.originalState]);
-
-  // Auto-check for unsaved changes when form fields change
-  useEffect(() => {
-    if (formStore.isEditMode && formStore.originalState) {
-      formStore.checkForUnsavedChanges(cartStore.items);
-    }
-  }, [
-    formStore.orderType,
-    formStore.selectedAreaId,
-    formStore.selectedTableId,
-    formStore.isTemporaryTable,
-    formStore.temporaryTableName,
-    formStore.scheduledTime,
-    formStore.deliveryInfo,
-    formStore.orderNotes,
-    formStore.adjustments,
-    formStore.prepaymentId,
-    formStore.prepaymentAmount,
-    formStore.prepaymentMethod,
-    formStore.isEditMode,
-    formStore.originalState,
-    cartStore.items,
-  ]);
 
   const loadOrderForEditing = (orderData: any) => {
     // Reset states first
@@ -353,9 +323,6 @@ export const useOrderManagement = () => {
     uiStore.resetUI();
   };
 
-  const checkForUnsavedChanges = () => {
-    formStore.checkForUnsavedChanges(cartStore.items);
-  };
 
   return {
     // Cart actions
@@ -420,7 +387,6 @@ export const useOrderManagement = () => {
     prepareOrderForBackend: prepareOrderForBackendData,
     confirmOrder,
     resetOrder,
-    checkForUnsavedChanges,
 
     // State getters
     get items() {
@@ -468,9 +434,6 @@ export const useOrderManagement = () => {
     get prepaymentMethod() {
       return formStore.prepaymentMethod;
     },
-    get hasUnsavedChanges() {
-      return formStore.hasUnsavedChanges;
-    },
     get orderDataLoaded() {
       return formStore.orderDataLoaded;
     },
@@ -516,3 +479,6 @@ export const useOrderTotal = () => {
 
 export const useOrderItemsCount = useCartItemsCount;
 export const useIsOrderEmpty = useIsCartEmpty;
+
+// Export the new optimized hook for unsaved changes
+export { useHasUnsavedChanges };

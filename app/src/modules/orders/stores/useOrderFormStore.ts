@@ -154,7 +154,6 @@ interface OrderFormState {
   prepaymentId: string | null;
   prepaymentAmount: string;
   prepaymentMethod: 'CASH' | 'CARD' | 'TRANSFER' | null;
-  hasUnsavedChanges: boolean;
   orderDataLoaded: boolean;
   originalState: {
     orderType: OrderType;
@@ -187,7 +186,6 @@ interface OrderFormState {
   setPrepaymentAmount: (amount: string) => void;
   setPrepaymentMethod: (method: 'CASH' | 'CARD' | 'TRANSFER' | null) => void;
   setEditMode: (isEdit: boolean, orderId?: string | null) => void;
-  checkForUnsavedChanges: (currentItems?: any[]) => void;
   resetForm: () => void;
   setOriginalState: (state: any) => void;
 }
@@ -207,7 +205,6 @@ export const useOrderFormStore = create<OrderFormState>((set, get) => ({
   prepaymentId: null,
   prepaymentAmount: '',
   prepaymentMethod: null,
-  hasUnsavedChanges: false,
   orderDataLoaded: false,
   originalState: null,
 
@@ -338,45 +335,6 @@ export const useOrderFormStore = create<OrderFormState>((set, get) => ({
     set({ isEditMode: isEdit, id: orderId || null });
   },
 
-  checkForUnsavedChanges: (currentItems: any[] = []) => {
-    const state = get();
-    if (!state.isEditMode || !state.originalState) {
-      set({ hasUnsavedChanges: false });
-      return;
-    }
-
-    // Comparación profunda de todos los campos
-    const hasFormChanges =
-      state.orderType !== state.originalState.orderType ||
-      state.selectedAreaId !== state.originalState.selectedAreaId ||
-      state.selectedTableId !== state.originalState.tableId ||
-      state.isTemporaryTable !== state.originalState.isTemporaryTable ||
-      state.temporaryTableName !== state.originalState.temporaryTableName ||
-      JSON.stringify(state.deliveryInfo) !==
-        JSON.stringify(state.originalState.deliveryInfo) ||
-      state.orderNotes !== state.originalState.notes ||
-      (state.scheduledTime?.getTime() ?? null) !==
-        (state.originalState.scheduledAt?.getTime() ?? null) ||
-      state.prepaymentId !== state.originalState.prepaymentId ||
-      state.prepaymentAmount !== state.originalState.prepaymentAmount ||
-      state.prepaymentMethod !== state.originalState.prepaymentMethod;
-
-    // Comparación profunda de ajustes
-    const hasAdjustmentChanges = !deepCompareAdjustments(
-      state.adjustments,
-      state.originalState.adjustments,
-    );
-
-    // Comparación profunda de items del carrito
-    const hasItemChanges = !deepCompareCartItems(
-      currentItems,
-      state.originalState.items,
-    );
-
-    const hasChanges = hasFormChanges || hasAdjustmentChanges || hasItemChanges;
-
-    set({ hasUnsavedChanges: hasChanges });
-  },
 
   resetForm: () => {
     set({
@@ -394,7 +352,6 @@ export const useOrderFormStore = create<OrderFormState>((set, get) => ({
       prepaymentId: null,
       prepaymentAmount: '',
       prepaymentMethod: null,
-      hasUnsavedChanges: false,
       orderDataLoaded: false,
       originalState: null,
     });
@@ -429,8 +386,46 @@ export const useOrderFormStore = create<OrderFormState>((set, get) => ({
 
     set({
       originalState,
-      hasUnsavedChanges: false,
       orderDataLoaded: true,
     });
   },
 }));
+
+// Hook personalizado para calcular hasUnsavedChanges de forma memorizada
+export const useHasUnsavedChanges = (currentItems: any[] = []) => {
+  return useOrderFormStore((state) => {
+    if (!state.isEditMode || !state.originalState) {
+      return false;
+    }
+
+    // Comparación profunda de todos los campos
+    const hasFormChanges =
+      state.orderType !== state.originalState.orderType ||
+      state.selectedAreaId !== state.originalState.selectedAreaId ||
+      state.selectedTableId !== state.originalState.tableId ||
+      state.isTemporaryTable !== state.originalState.isTemporaryTable ||
+      state.temporaryTableName !== state.originalState.temporaryTableName ||
+      JSON.stringify(state.deliveryInfo) !==
+        JSON.stringify(state.originalState.deliveryInfo) ||
+      state.orderNotes !== state.originalState.notes ||
+      (state.scheduledTime?.getTime() ?? null) !==
+        (state.originalState.scheduledAt?.getTime() ?? null) ||
+      state.prepaymentId !== state.originalState.prepaymentId ||
+      state.prepaymentAmount !== state.originalState.prepaymentAmount ||
+      state.prepaymentMethod !== state.originalState.prepaymentMethod;
+
+    // Comparación profunda de ajustes
+    const hasAdjustmentChanges = !deepCompareAdjustments(
+      state.adjustments,
+      state.originalState.adjustments,
+    );
+
+    // Comparación profunda de items del carrito
+    const hasItemChanges = !deepCompareCartItems(
+      currentItems,
+      state.originalState.items,
+    );
+
+    return hasFormChanges || hasAdjustmentChanges || hasItemChanges;
+  });
+};

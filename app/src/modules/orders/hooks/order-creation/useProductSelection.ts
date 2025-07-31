@@ -137,17 +137,18 @@ export const useProductSelection = ({
         if (product) break;
       }
 
-      if (product) {
-        setEditingItem(item);
-        setSelectedProduct(product);
-        hideCart();
-      } else {
+      if (!product) {
         showSnackbar({
           message:
             'No se pudo encontrar el producto. Por favor, recarga la pantalla.',
           type: 'error',
         });
+        return;
       }
+
+      setEditingItem(item);
+      setSelectedProduct(product);
+      hideCart();
     },
     [menu, showSnackbar, hideCart],
   );

@@ -44,21 +44,21 @@ export const DeliveryForm = forwardRef<DeliveryFormRef, DeliveryFormProps>(
       setScheduledTime(null);
     };
     React.useEffect(() => {
-      if (deliveryInfo.fullAddress?.trim()) {
+      if (deliveryInfo.fullAddress?.trim() && addressError) {
         setAddressError(null);
       }
-    }, [deliveryInfo.fullAddress]);
+    }, [deliveryInfo.fullAddress, addressError]);
 
     React.useEffect(() => {
       if (deliveryInfo.recipientPhone?.trim()) {
         const phoneDigits = deliveryInfo.recipientPhone.replace(/\D/g, '');
-        if (phoneDigits.length >= 10) {
+        if (phoneDigits.length >= 10 && recipientPhoneError) {
           setRecipientPhoneError(null);
         }
-      } else {
+      } else if (recipientPhoneError) {
         setRecipientPhoneError(null);
       }
-    }, [deliveryInfo.recipientPhone]);
+    }, [deliveryInfo.recipientPhone, recipientPhoneError]);
     const validate = useCallback(() => {
       let isValid = true;
 

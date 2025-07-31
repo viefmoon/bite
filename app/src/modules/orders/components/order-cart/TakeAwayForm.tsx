@@ -46,21 +46,21 @@ export const TakeAwayForm = forwardRef<TakeAwayFormRef, TakeAwayFormProps>(
       setScheduledTime(null);
     };
     React.useEffect(() => {
-      if (deliveryInfo.recipientName?.trim()) {
+      if (deliveryInfo.recipientName?.trim() && recipientNameError) {
         setRecipientNameError(null);
       }
-    }, [deliveryInfo.recipientName]);
+    }, [deliveryInfo.recipientName, recipientNameError]);
 
     React.useEffect(() => {
       if (deliveryInfo.recipientPhone?.trim()) {
         const phoneDigits = deliveryInfo.recipientPhone.replace(/\D/g, '');
-        if (phoneDigits.length >= 10) {
+        if (phoneDigits.length >= 10 && recipientPhoneError) {
           setRecipientPhoneError(null);
         }
-      } else {
+      } else if (recipientPhoneError) {
         setRecipientPhoneError(null);
       }
-    }, [deliveryInfo.recipientPhone]);
+    }, [deliveryInfo.recipientPhone, recipientPhoneError]);
     const validate = useCallback(() => {
       let isValid = true;
 

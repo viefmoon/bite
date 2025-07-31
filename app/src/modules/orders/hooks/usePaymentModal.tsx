@@ -19,7 +19,6 @@ interface UsePaymentModalProps {
   orderTotal: number;
   mode?: 'payment' | 'prepayment';
   existingPrepaymentId?: string;
-  existingPayments?: any[];
   onPaymentRegistered?: () => void;
 }
 
@@ -29,7 +28,6 @@ export const usePaymentModal = ({
   orderTotal,
   mode = 'payment',
   existingPrepaymentId,
-  existingPayments = [],
   onPaymentRegistered,
 }: UsePaymentModalProps) => {
   const queryClient = useQueryClient();
@@ -53,7 +51,7 @@ export const usePaymentModal = ({
     enabled: !!orderId && visible && mode === 'payment',
   });
 
-  // Usar payments actualizados o fallback
+  // Usar payments actualizados como única fuente de verdad
   const payments = useMemo(() => {
     if (mode === 'payment' && orderData?.payments && Array.isArray(orderData.payments)) {
       return orderData.payments.map(payment => ({
@@ -66,8 +64,8 @@ export const usePaymentModal = ({
         orderId: payment.orderId,
       }));
     }
-    return Array.isArray(existingPayments) ? existingPayments : [];
-  }, [mode, orderData?.payments, existingPayments]);
+    return [];
+  }, [mode, orderData?.payments]);
   
   // Mutations
   const createPaymentMutation = useCreatePaymentMutation();

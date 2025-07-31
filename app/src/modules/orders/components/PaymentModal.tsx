@@ -27,7 +27,6 @@ interface PaymentModalProps {
   orderTotal: number;
   orderNumber?: number;
   orderStatus?: string; // Estado de la orden
-  existingPayments?: any[]; // Payments existentes desde la orden
   onOrderCompleted?: () => void; // Callback cuando se completa la orden
   onPaymentRegistered?: () => void; // Callback cuando se registra un pago
   mode?: 'payment' | 'prepayment'; // Modo del modal
@@ -47,7 +46,6 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   orderTotal,
   orderNumber,
   orderStatus,
-  existingPayments,
   onOrderCompleted,
   onPaymentRegistered,
   mode = 'payment',
@@ -107,7 +105,6 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     orderTotal,
     mode,
     existingPrepaymentId,
-    existingPayments,
     onPaymentRegistered,
   });
 

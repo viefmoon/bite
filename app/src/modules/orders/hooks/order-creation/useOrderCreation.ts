@@ -85,7 +85,7 @@ export const useOrderCreation = ({
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('beforeRemove', (e: any) => {
-      if (isCartEmpty || showExitConfirmationModal || isProcessingOrder) {
+      if (isCartEmpty || showExitConfirmationModal || isProcessingOrderRef.current) {
         return;
       }
 
@@ -97,7 +97,7 @@ export const useOrderCreation = ({
     });
 
     return unsubscribe;
-  }, [navigation, isCartEmpty, showExitConfirmationModal, isProcessingOrder]);
+  }, [navigation, isCartEmpty, showExitConfirmationModal]);
 
   return {
     isProcessingOrder,

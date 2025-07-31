@@ -29,6 +29,7 @@ import {
   useOrderSubtotal,
   useOrderTotal,
   useOrderItemsCount,
+  useHasUnsavedChanges,
 } from '../stores/useOrderManagement';
 import { CartItem, CartItemModifier } from '../utils/cartUtils';
 import { OrderDetailsForBackend } from '../utils/orderUtils';
@@ -107,7 +108,6 @@ const useOrderCart = ({
     prepaymentAmount: paymentAmount,
     prepaymentMethod: paymentMethod,
     isCartVisible,
-    hasUnsavedChanges,
     isConfirming,
     setOrderType,
     setScheduledTime,
@@ -128,6 +128,7 @@ const useOrderCart = ({
   const subtotal = useOrderSubtotal();
   const total = useOrderTotal();
   const totalItemsCount = useOrderItemsCount();
+  const hasUnsavedChanges = useHasUnsavedChanges(items);
   const {
     data: orderData,
     isLoading: isLoadingOrder,
