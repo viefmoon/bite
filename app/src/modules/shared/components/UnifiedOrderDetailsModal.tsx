@@ -90,7 +90,7 @@ export const UnifiedOrderDetailsModal: React.FC<
     <View>
       <IconButton
         icon="history"
-        size={24}
+        size={32}
         onPress={() => setShowHistory(true)}
       />
     </View>

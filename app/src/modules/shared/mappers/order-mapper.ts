@@ -47,17 +47,17 @@ const mapOrderForFinalizationItemToUnified = (item: any): UnifiedOrderItem => ({
 
 const mapDomainOrderItemToUnified = (item: any): UnifiedOrderItem => ({
   id: item.id,
-  productName: item.productName || 'Producto desconocido',
-  variantName: item.variantName,
+  productName: item.product?.name || 'Producto desconocido',
+  variantName: item.productVariant?.name,
   quantity: item.quantity || 1,
-  finalPrice: item.totalPrice || item.unitPrice || 0,
-  basePrice: item.unitPrice || 0,
-  preparationStatus: undefined, // Domain Order no tiene preparation status típicamente
-  preparationNotes: item.notes,
-  modifiers: item.modifiers?.map((mod: any) => ({
-    id: mod.productModifierId,
-    name: mod.modifierName,
-    price: mod.price,
+  finalPrice: item.finalPrice || 0,
+  basePrice: item.basePrice || 0,
+  preparationStatus: item.preparationStatus,
+  preparationNotes: item.preparationNotes,
+  modifiers: item.productModifiers?.map((mod: any) => ({
+    id: mod.id,
+    name: mod.name,
+    price: mod.price || 0,
   })),
   selectedPizzaCustomizations: item.selectedPizzaCustomizations,
 });

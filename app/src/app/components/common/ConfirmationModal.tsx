@@ -54,6 +54,7 @@ const ConfirmationModal = ({
       dismissable={!isConfirming}
       isLoading={isConfirming}
       noScroll={true}
+      noPadding={true}
       actions={[
         ...(onCancel
           ? [
@@ -86,10 +87,12 @@ const ConfirmationModal = ({
 
 const styles = StyleSheet.create({
   message: {
-    lineHeight: 22,
+    lineHeight: 24,
     textAlign: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 4,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    marginVertical: 16,
+    minHeight: 120,
   },
 });
 

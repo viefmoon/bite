@@ -26,7 +26,6 @@ interface NewPaymentFormProps {
   isLoading?: boolean;
 }
 
-
 export const NewPaymentForm: React.FC<NewPaymentFormProps> = ({
   selectedMethod,
   onMethodChange,
@@ -55,7 +54,9 @@ export const NewPaymentForm: React.FC<NewPaymentFormProps> = ({
       {/* Métodos de pago */}
       <View style={styles.methodsContainer}>
         {Object.entries(PaymentMethodEnum).map(([key, value]) => {
-          const isDisabled = DISABLED_PAYMENT_METHODS.includes(value as PaymentMethod);
+          const isDisabled = DISABLED_PAYMENT_METHODS.includes(
+            value as PaymentMethod,
+          );
           return (
             <TouchableOpacity
               key={key}

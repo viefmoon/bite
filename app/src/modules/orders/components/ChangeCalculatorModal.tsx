@@ -62,8 +62,8 @@ export const ChangeCalculatorModal: React.FC<ChangeCalculatorModalProps> = ({
       visible={visible}
       onDismiss={onDismiss}
       title="Calcular Cambio"
-      maxWidthPercent={85}
-      maxHeightPercent={60}
+      maxWidthPercent={95}
+      maxHeightPercent={75}
       actions={[
         {
           label: 'Cancelar',
@@ -175,6 +175,7 @@ const createStyles = (theme: AppTheme) =>
   StyleSheet.create({
     content: {
       // Ya no necesita padding ya que ResponsiveModal lo maneja
+      paddingBottom: 100, // Padding extra para aumentar la altura del modal
     },
     inputsRow: {
       flexDirection: 'row',

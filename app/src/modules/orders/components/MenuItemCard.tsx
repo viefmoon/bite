@@ -31,7 +31,6 @@ const MenuItemCard = React.memo<MenuItemCardProps>(
     const { colors } = theme;
     const responsive = useResponsive();
 
-
     const styles = useMemo(
       () =>
         StyleSheet.create({
