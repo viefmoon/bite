@@ -528,7 +528,6 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
 
       {/* Order Info Section */}
       <View style={dynamicStyles.infoSection}>
-
         {order.deliveryInfo?.recipientPhone && (
           <View style={styles.infoRow}>
             <Text
@@ -908,7 +907,9 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
               { backgroundColor: paymentStatus.color },
             ]}
           >
-            <Text style={styles.paymentBadgeText}>💵 {paymentStatus.label}</Text>
+            <Text style={styles.paymentBadgeText}>
+              💵 {paymentStatus.label}
+            </Text>
           </View>
         </View>
       </View>

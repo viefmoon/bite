@@ -49,23 +49,38 @@ export const DeliveryForm = forwardRef<DeliveryFormRef, DeliveryFormProps>(
       }
     }, [deliveryInfo.fullAddress]);
 
-
     React.useEffect(() => {
       if (deliveryInfo.recipientPhone?.trim()) {
+        const phoneDigits = deliveryInfo.recipientPhone.replace(/\D/g, '');
+        if (phoneDigits.length >= 10) {
+          setRecipientPhoneError(null);
+        }
+      } else {
         setRecipientPhoneError(null);
       }
     }, [deliveryInfo.recipientPhone]);
     const validate = useCallback(() => {
       let isValid = true;
+
+      // Validar dirección (requerida)
       if (!deliveryInfo.fullAddress?.trim()) {
         setAddressError('Por favor ingresa la dirección de entrega');
         isValid = false;
       }
 
+      // Validar teléfono (opcional, pero si se ingresa debe ser válido)
+      if (deliveryInfo.recipientPhone?.trim()) {
+        const phoneDigits = deliveryInfo.recipientPhone.replace(/\D/g, '');
+        if (phoneDigits.length < 10) {
+          setRecipientPhoneError(
+            'El número de teléfono debe tener al menos 10 dígitos',
+          );
+          isValid = false;
+        }
+      }
+
       return isValid;
-    }, [
-      deliveryInfo.fullAddress,
-    ]);
+    }, [deliveryInfo.fullAddress, deliveryInfo.recipientPhone]);
     useImperativeHandle(
       ref,
       () => ({
@@ -95,7 +110,6 @@ export const DeliveryForm = forwardRef<DeliveryFormRef, DeliveryFormProps>(
             </HelperText>
           )}
         </View>
-
 
         <View style={[styles.section, styles.fieldContainer]}>
           <SpeechRecognitionInput

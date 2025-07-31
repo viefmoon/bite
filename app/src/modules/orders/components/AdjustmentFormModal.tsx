@@ -61,8 +61,8 @@ export const AdjustmentFormModal: React.FC<AdjustmentFormModalProps> = ({
         setNameWasEdited(true); // Si es edición, asumimos que el nombre fue editado
       } else {
         setFormData({
-          name: 'Cargo adicional', // Por defecto cargo
-          isPercentage: true,
+          name: 'Cargo adicional',
+          isPercentage: false,
           value: 0,
           amount: 0,
         });
@@ -105,18 +105,24 @@ export const AdjustmentFormModal: React.FC<AdjustmentFormModalProps> = ({
     }
 
     if (formData.isPercentage) {
-      if (formData.value === undefined || formData.value === null) {
+      // Validar usando el texto del campo y el valor calculado
+      const textValue = parseFloat(percentageText);
+      if (!percentageText.trim() || isNaN(textValue)) {
         newErrors.value = 'El porcentaje es requerido';
-      } else if (formData.value === 0) {
+      } else if (textValue === 0) {
         newErrors.value = 'El porcentaje no puede ser 0';
-      } else if (formData.value < -100 || formData.value > 100) {
-        newErrors.value = 'El porcentaje debe estar entre -100 y 100';
+      } else if (textValue < 0 || textValue > 100) {
+        newErrors.value = 'El porcentaje debe estar entre 0 y 100';
       }
     } else {
-      if (formData.amount === undefined || formData.amount === null) {
+      // Validar usando el texto del campo y el valor calculado
+      const textValue = parseFloat(amountText);
+      if (!amountText.trim() || isNaN(textValue)) {
         newErrors.amount = 'El monto es requerido';
-      } else if (formData.amount === 0) {
+      } else if (textValue === 0) {
         newErrors.amount = 'El monto no puede ser 0';
+      } else if (textValue < 0) {
+        newErrors.amount = 'El monto debe ser positivo';
       }
     }
 
@@ -125,7 +131,9 @@ export const AdjustmentFormModal: React.FC<AdjustmentFormModalProps> = ({
   };
 
   const handleSave = () => {
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      return;
+    }
 
     const adjustmentData: OrderAdjustment = {
       id: adjustment?.id || undefined,
@@ -182,14 +190,16 @@ export const AdjustmentFormModal: React.FC<AdjustmentFormModalProps> = ({
         </HelperText>
       )}
 
-      {/* Tipo de ajuste con chips */}
-      <View style={styles.typeContainer}>
+      {/* Configuración de ajuste en una sola sección compacta */}
+      <View style={styles.configContainer}>
         <Text
           variant="labelLarge"
           style={[styles.label, { color: theme.colors.onSurface }]}
         >
-          Tipo de ajuste
+          Configuración
         </Text>
+
+        {/* Fila 1: Tipo de ajuste */}
         <View style={styles.chipGroup}>
           <Chip
             mode={formData.isPercentage ? 'flat' : 'outlined'}
@@ -228,22 +238,13 @@ export const AdjustmentFormModal: React.FC<AdjustmentFormModalProps> = ({
             Monto fijo
           </Chip>
         </View>
-      </View>
 
-      {/* Tipo de operación (descuento o cargo) */}
-      <View style={styles.operationContainer}>
-        <Text
-          variant="labelLarge"
-          style={[styles.label, { color: theme.colors.onSurface }]}
-        >
-          Tipo de operación
-        </Text>
+        {/* Fila 2: Tipo de operación */}
         <View style={styles.operationButtons}>
           <Button
             mode={isDiscount ? 'contained' : 'outlined'}
             onPress={() => {
               setIsDiscount(true);
-              // Siempre actualizar el nombre si no fue editado manualmente
               if (!nameWasEdited) {
                 setFormData((prev) => ({ ...prev, name: 'Descuento' }));
               }
@@ -275,7 +276,6 @@ export const AdjustmentFormModal: React.FC<AdjustmentFormModalProps> = ({
             mode={!isDiscount ? 'contained' : 'outlined'}
             onPress={() => {
               setIsDiscount(false);
-              // Siempre actualizar el nombre si no fue editado manualmente
               if (!nameWasEdited) {
                 setFormData((prev) => ({
                   ...prev,
@@ -309,88 +309,94 @@ export const AdjustmentFormModal: React.FC<AdjustmentFormModalProps> = ({
         </View>
       </View>
 
-      {/* Campo de valor */}
-      {formData.isPercentage ? (
-        <TextInput
-          label="Porcentaje"
-          value={percentageText}
-          onChangeText={(text) => {
-            // Solo permitir números positivos
-            const regex = /^\d*\.?\d*$/;
-            if (regex.test(text) || text === '') {
-              setPercentageText(text);
-              const value = parseFloat(text) || 0;
-              setFormData((prev) => ({
-                ...prev,
-                value: isDiscount ? -value : value,
-              }));
-            }
-          }}
-          mode="outlined"
-          keyboardType="numeric"
-          error={!!errors.value}
-          right={<TextInput.Affix text="%" />}
-          style={styles.input}
-        />
-      ) : (
-        <TextInput
-          label="Monto"
-          value={amountText}
-          onChangeText={(text) => {
-            // Solo permitir números positivos
-            const regex = /^\d*\.?\d*$/;
-            if (regex.test(text) || text === '') {
-              setAmountText(text);
-              const amount = parseFloat(text) || 0;
-              setFormData((prev) => ({
-                ...prev,
-                amount: isDiscount ? -amount : amount,
-              }));
-            }
-          }}
-          mode="outlined"
-          keyboardType="numeric"
-          error={!!errors.amount}
-          left={<TextInput.Affix text="$" />}
-          style={styles.input}
-        />
-      )}
-      {(errors.value || errors.amount) && (
-        <HelperText type="error" visible={true}>
-          {errors.value || errors.amount}
-        </HelperText>
-      )}
+      {/* Campo de valor con padding adicional */}
+      <View style={styles.valueFieldContainer}>
+        {formData.isPercentage ? (
+          <TextInput
+            label="Porcentaje"
+            value={percentageText}
+            onChangeText={(text) => {
+              // Solo permitir números positivos
+              const regex = /^\d*\.?\d*$/;
+              if (regex.test(text) || text === '') {
+                setPercentageText(text);
+                const value = parseFloat(text) || 0;
+                setFormData((prev) => ({
+                  ...prev,
+                  value: isDiscount ? -value : value,
+                }));
+              }
+            }}
+            mode="outlined"
+            keyboardType="numeric"
+            error={!!errors.value}
+            right={<TextInput.Affix text="%" />}
+            style={styles.input}
+          />
+        ) : (
+          <TextInput
+            label="Monto"
+            value={amountText}
+            onChangeText={(text) => {
+              // Solo permitir números positivos
+              const regex = /^\d*\.?\d*$/;
+              if (regex.test(text) || text === '') {
+                setAmountText(text);
+                const amount = parseFloat(text) || 0;
+                setFormData((prev) => ({
+                  ...prev,
+                  amount: isDiscount ? -amount : amount,
+                }));
+              }
+            }}
+            mode="outlined"
+            keyboardType="numeric"
+            error={!!errors.amount}
+            left={<TextInput.Affix text="$" />}
+            style={styles.input}
+          />
+        )}
+        {(errors.value || errors.amount) && (
+          <HelperText type="error" visible={true}>
+            {errors.value || errors.amount}
+          </HelperText>
+        )}
+      </View>
     </ResponsiveModal>
   );
 };
 
 const styles = StyleSheet.create({
   input: {
-    marginBottom: 16,
+    marginBottom: 12,
   },
-  typeContainer: {
-    marginBottom: 16,
+  configContainer: {
+    marginBottom: 8,
   },
   label: {
-    marginBottom: 8,
+    marginBottom: 6,
     fontWeight: '500',
+    fontSize: 14,
   },
   chipGroup: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
+    marginBottom: 8,
   },
   chip: {
     flex: 1,
-  },
-  operationContainer: {
-    marginBottom: 16,
+    height: 36,
   },
   operationButtons: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 8,
+    gap: 8,
   },
   operationButton: {
     flex: 1,
+    minHeight: 40,
+  },
+  valueFieldContainer: {
+    paddingBottom: 4,
+    paddingTop: 8,
   },
 });

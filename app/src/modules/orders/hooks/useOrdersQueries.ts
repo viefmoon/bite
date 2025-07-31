@@ -51,9 +51,19 @@ export const useUpdateOrderMutation = () => {
       suppressSuccessMessage: true, // Manejamos mensaje personalizado en onSuccess
       suppressErrorMessage: true, // Manejamos mensaje personalizado en onError
       onSuccess: (updatedOrder, variables) => {
-        // Invalidar query específica del detalle de la orden
+        // Invalidar queries específicas para asegurar actualización inmediata
         queryClient.invalidateQueries({
           queryKey: [...orderKeys.details(), variables.orderId],
+        });
+        
+        // Invalidar específicamente la lista de órdenes abiertas
+        queryClient.invalidateQueries({
+          queryKey: orderKeys.openOrdersList(),
+        });
+        
+        // Invalidar todas las listas de órdenes
+        queryClient.invalidateQueries({
+          queryKey: orderKeys.lists(),
         });
 
         showSnackbar({
@@ -165,9 +175,8 @@ export const useGetOpenOrdersListQuery = (options?: {
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: true,
     refetchOnMount: true,
-    staleTime: 5000,
+    staleTime: 0,
     gcTime: 10 * 60 * 1000,
-    placeholderData: (previousData) => previousData,
   });
 };
 

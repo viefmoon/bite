@@ -13,7 +13,6 @@ import {
   Divider,
   Surface,
   IconButton,
-  Menu,
   Checkbox,
   HelperText,
 } from 'react-native-paper';
@@ -45,7 +44,7 @@ import { useGetAreas } from '@/modules/areasTables/hooks/useAreasQueries';
 import { useGetTablesByAreaId } from '@/modules/areasTables/hooks/useTablesQueries';
 import type { Area } from '@/app/schemas/domain/area.schema';
 import type { Table } from '@/app/schemas/domain/table.schema';
-import AnimatedLabelSelector from '@/app/components/common/AnimatedLabelSelector';
+import { ThemeDropdown, type DropdownOption } from '@/app/components/common/ThemeDropdown';
 import type { DeliveryInfo } from '@/app/schemas/domain/delivery-info.schema';
 import ConfirmationModal from '@/app/components/common/ConfirmationModal';
 
@@ -124,10 +123,6 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
   const [showExitConfirmationModal, setShowExitConfirmationModal] =
     useState(false);
 
-  // Estados de menús
-  const [areaMenuVisible, setAreaMenuVisible] = useState(false);
-  const [tableMenuVisible, setTableMenuVisible] = useState(false);
-
   const { data: menu } = useGetOrderMenu();
 
   // Queries para áreas y mesas
@@ -142,6 +137,25 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
     error: errorTables,
   } = useGetTablesByAreaId(editableSelectedAreaId, {});
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
+
+  // Opciones para dropdowns
+  const areaOptions: DropdownOption[] = useMemo(
+    () => areasData?.map((area: Area) => ({
+      id: area.id,
+      label: area.name,
+    })) || [],
+    [areasData]
+  );
+
+  const tableOptions: DropdownOption[] = useMemo(
+    () => tablesData?.map((table: Table) => ({
+      id: table.id,
+      label: table.name,
+      disabled: !table.isAvailable,
+      icon: table.isAvailable ? 'table-furniture' : 'table-furniture-off',
+    })) || [],
+    [tablesData]
+  );
 
   // Nombres computed para área y mesa
   const selectedAreaName = useMemo(
@@ -873,123 +887,51 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
             <View style={styles.compactDeliveryContainer}>
               <View style={styles.dineInSelectorsRow}>
                 <View style={styles.dineInSelectorContainer}>
-                  <Menu
-                    visible={areaMenuVisible}
-                    onDismiss={() => setAreaMenuVisible(false)}
-                    anchor={
-                      <AnimatedLabelSelector
-                        label="Área *"
-                        value={selectedAreaName}
-                        onPress={() => setAreaMenuVisible(true)}
-                        isLoading={isLoadingAreas}
-                        error={!!areaError || !!errorAreas}
-                        disabled={isLoadingAreas}
-                      />
-                    }
-                  >
-                    {areasData?.map((area: Area) => (
-                      <Menu.Item
-                        key={area.id}
-                        onPress={() => {
-                          setEditableSelectedAreaId(area.id);
-                          setEditableSelectedTableId(null);
-                          setAreaMenuVisible(false);
-                          setAreaError(null);
-                        }}
-                        title={area.name}
-                      />
-                    ))}
-                    {errorAreas && (
-                      <Menu.Item title="Error al cargar áreas" disabled />
-                    )}
-                  </Menu>
-                  {areaError && !errorAreas && (
-                    <HelperText
-                      type="error"
-                      visible={true}
-                      style={styles.helperTextFix}
-                    >
-                      {areaError}
-                    </HelperText>
-                  )}
-                  {errorAreas && (
-                    <HelperText
-                      type="error"
-                      visible={true}
-                      style={styles.helperTextFix}
-                    >
-                      Error al cargar áreas
-                    </HelperText>
-                  )}
+                  <ThemeDropdown
+                    label="Área"
+                    value={editableSelectedAreaId}
+                    options={areaOptions}
+                    onSelect={(option) => {
+                      setEditableSelectedAreaId(option.id);
+                      setEditableSelectedTableId(null);
+                      setAreaError(null);
+                    }}
+                    loading={isLoadingAreas}
+                    disabled={isLoadingAreas}
+                    error={!!areaError || !!errorAreas}
+                    helperText={areaError || (errorAreas ? 'Error al cargar áreas' : undefined)}
+                    required
+                    placeholder="Selecciona un área"
+                  />
                 </View>
 
                 <View style={styles.dineInSelectorContainer}>
-                  <Menu
-                    visible={tableMenuVisible}
-                    onDismiss={() => setTableMenuVisible(false)}
-                    anchor={
-                      <AnimatedLabelSelector
-                        label="Mesa *"
-                        value={selectedTableName}
-                        onPress={() => setTableMenuVisible(true)}
-                        isLoading={isLoadingTables}
-                        error={!!tableError || !!errorTables}
-                        disabled={
-                          !editableSelectedAreaId ||
-                          isLoadingTables ||
-                          isLoadingAreas ||
-                          editableIsTemporaryTable
-                        }
-                      />
+                  <ThemeDropdown
+                    label="Mesa"
+                    value={editableSelectedTableId}
+                    options={tableOptions}
+                    onSelect={(option) => {
+                      setEditableSelectedTableId(option.id);
+                      setTableError(null);
+                    }}
+                    loading={isLoadingTables}
+                    disabled={
+                      !editableSelectedAreaId ||
+                      isLoadingTables ||
+                      isLoadingAreas ||
+                      editableIsTemporaryTable
                     }
-                  >
-                    {tablesData?.map((table: Table) => (
-                      <Menu.Item
-                        key={table.id}
-                        onPress={() => {
-                          if (table.isAvailable) {
-                            setEditableSelectedTableId(table.id);
-                            setTableMenuVisible(false);
-                            setTableError(null);
-                          }
-                        }}
-                        title={`${table.name}${!table.isAvailable ? ' (Ocupada)' : ''}`}
-                        disabled={!table.isAvailable}
-                        titleStyle={
-                          !table.isAvailable
-                            ? { color: colors.error }
-                            : undefined
-                        }
-                      />
-                    ))}
-                    {editableSelectedAreaId &&
-                      tablesData?.length === 0 &&
-                      !isLoadingTables &&
-                      !errorTables && (
-                        <Menu.Item title="No hay mesas" disabled />
-                      )}
-                    {errorTables && (
-                      <Menu.Item title="Error al cargar mesas" disabled />
-                    )}
-                  </Menu>
-                  {tableError && !errorTables && !editableIsTemporaryTable && (
-                    <HelperText
-                      type="error"
-                      visible={true}
-                      style={styles.helperTextFix}
-                    >
-                      {tableError}
-                    </HelperText>
-                  )}
-                  {errorTables && (
-                    <HelperText
-                      type="error"
-                      visible={true}
-                      style={styles.helperTextFix}
-                    >
-                      Error al cargar mesas
-                    </HelperText>
-                  )}
+                    error={!!tableError || !!errorTables}
+                    helperText={
+                      !editableIsTemporaryTable ? (
+                        tableError || (errorTables ? 'Error al cargar mesas' : 
+                        editableSelectedAreaId && tableOptions.length === 0 && !isLoadingTables ? 
+                        'No hay mesas disponibles en esta área' : undefined)
+                      ) : undefined
+                    }
+                    required
+                    placeholder="Selecciona una mesa"
+                  />
                 </View>
               </View>
 
