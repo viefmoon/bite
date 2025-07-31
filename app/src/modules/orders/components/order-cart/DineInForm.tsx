@@ -3,9 +3,11 @@ import React, {
   useImperativeHandle,
   forwardRef,
   useCallback,
+  useMemo,
 } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Text, Menu, HelperText, Checkbox } from 'react-native-paper';
+import { Text, Checkbox, HelperText } from 'react-native-paper';
+import { ThemeDropdown, type DropdownOption } from '@/app/components/common/ThemeDropdown';
 import AnimatedLabelSelector from '@/app/components/common/AnimatedLabelSelector';
 import SpeechRecognitionInput from '@/app/components/common/SpeechRecognitionInput';
 import { useAppTheme } from '@/app/styles/theme';
@@ -44,44 +46,101 @@ export const DineInForm = forwardRef<DineInFormRef, DineInFormProps>(
       data: areasData = [],
       isLoading: isLoadingAreas,
       error: errorAreas,
+      refetch: refetchAreas,
     } = useGetAreas();
+    
     const {
       data: tablesData = [],
       isLoading: isLoadingTables,
       error: errorTables,
+      refetch: refetchTables,
     } = useGetTablesByAreaId(
       selectedAreaId || '',
       {},
       { enabled: !!selectedAreaId },
     );
-    const selectedAreaName =
-      areasData.find((a: any) => a.id === selectedAreaId)?.name ||
-      'Selecciona un área';
-    const selectedTableName =
-      tablesData.find((t: Table) => t.id === selectedTableId)?.name ||
-      'Selecciona una mesa';
+
+    // Transformar áreas en opciones para el dropdown
+    const areaOptions: DropdownOption[] = useMemo(() => 
+      areasData.map((area: any) => ({
+        id: area.id,
+        label: area.name,
+        disabled: false,
+      })),
+      [areasData]
+    );
+
+    // Transformar mesas en opciones para el dropdown
+    const tableOptions: DropdownOption[] = useMemo(() => 
+      tablesData.map((table: Table) => {
+        const isCurrentTable = isEditMode && selectedTableId === table.id;
+        const canSelect = table.isAvailable || isCurrentTable;
+        
+        return {
+          id: table.id,
+          label: table.name,
+          subtitle: !table.isAvailable && !isCurrentTable ? 'Ocupada' : undefined,
+          disabled: !canSelect,
+          icon: table.isAvailable || isCurrentTable ? 'table-furniture' : 'table-furniture-off',
+        };
+      }),
+      [tablesData, isEditMode, selectedTableId]
+    );
     const formattedScheduledTime = scheduledTime
       ? format(scheduledTime, 'h:mm a').toLowerCase()
       : '';
+    
     const theme = useAppTheme();
-    const styles = React.useMemo(() => createStyles(theme), [theme]);
-    const [areaMenuVisible, setAreaMenuVisible] = useState(false);
-    const [tableMenuVisible, setTableMenuVisible] = useState(false);
+    const styles = useMemo(() => createStyles(theme), [theme]);
+
+    // Estados de validación
     const [areaError, setAreaError] = useState<string | null>(null);
     const [tableError, setTableError] = useState<string | null>(null);
-    const handleScheduleTimeClear = () => {
+
+    // Handlers
+    const handleScheduleTimeClear = useCallback(() => {
       setScheduledTime(null);
-    };
+    }, [setScheduledTime]);
+
+    const handleAreaSelect = useCallback((option: DropdownOption) => {
+      setSelectedAreaId(option.id);
+      setAreaError(null);
+      // Limpiar selección de mesa cuando se cambia el área
+      if (selectedTableId) {
+        setSelectedTableId(null);
+      }
+    }, [setSelectedAreaId, selectedTableId, setSelectedTableId]);
+
+    const handleTableSelect = useCallback((option: DropdownOption) => {
+      setSelectedTableId(option.id);
+      setTableError(null);
+    }, [setSelectedTableId]);
+
+    const handleAreaOpen = useCallback(() => {
+      if (refetchAreas) {
+        refetchAreas();
+      }
+    }, [refetchAreas]);
+
+    const handleTableOpen = useCallback(() => {
+      if (selectedAreaId && refetchTables) {
+        refetchTables();
+      }
+    }, [selectedAreaId, refetchTables]);
+    // Efectos para limpiar errores
     React.useEffect(() => {
-      if (selectedAreaId) {
+      if (selectedAreaId && areaError) {
         setAreaError(null);
       }
-    }, [selectedAreaId]);
+    }, [selectedAreaId, areaError]);
+
     React.useEffect(() => {
-      if (selectedTableId || (isTemporaryTable && temporaryTableName)) {
+      if ((selectedTableId || (isTemporaryTable && temporaryTableName)) && tableError) {
         setTableError(null);
       }
-    }, [selectedTableId, isTemporaryTable, temporaryTableName]);
+    }, [selectedTableId, isTemporaryTable, temporaryTableName, tableError]);
+
+    // Función de validación
     const validate = useCallback(() => {
       let isValid = true;
 
@@ -111,115 +170,53 @@ export const DineInForm = forwardRef<DineInFormRef, DineInFormProps>(
     );
 
     return (
-      <>
+      <View style={styles.container}>
         <View style={styles.selectorsRow}>
           <View style={styles.selectorContainer}>
-            <Menu
-              visible={areaMenuVisible}
-              onDismiss={() => setAreaMenuVisible(false)}
-              anchor={
-                <AnimatedLabelSelector
-                  label="Área *"
-                  value={selectedAreaName}
-                  onPress={() => setAreaMenuVisible(true)}
-                  isLoading={isLoadingAreas}
-                  error={!!areaError || !!errorAreas}
-                  disabled={isLoadingAreas}
-                />
-              }
-            >
-              {areasData?.map((area: any) => (
-                <Menu.Item
-                  key={area.id}
-                  onPress={() => {
-                    setSelectedAreaId(area.id);
-                    setAreaMenuVisible(false);
-                    setAreaError(null);
-                  }}
-                  title={area.name}
-                />
-              ))}
-              {errorAreas && (
-                <Menu.Item title="Error al cargar áreas" disabled />
-              )}
-            </Menu>
-            {areaError && !errorAreas && (
-              <HelperText type="error" visible={true} style={styles.helperText}>
-                {areaError}
-              </HelperText>
-            )}
-            {errorAreas && (
-              <HelperText type="error" visible={true} style={styles.helperText}>
-                Error al cargar áreas
-              </HelperText>
-            )}
+            <ThemeDropdown
+              label="Área"
+              value={selectedAreaId}
+              options={areaOptions}
+              onSelect={handleAreaSelect}
+              onOpen={handleAreaOpen}
+              loading={isLoadingAreas}
+              disabled={isLoadingAreas}
+              error={!!areaError || !!errorAreas}
+              helperText={areaError || (errorAreas ? 'Error al cargar áreas' : undefined)}
+              required
+              placeholder="Selecciona un área"
+            />
           </View>
 
           <View style={styles.selectorContainer}>
-            <Menu
-              visible={tableMenuVisible}
-              onDismiss={() => setTableMenuVisible(false)}
-              anchor={
-                <AnimatedLabelSelector
-                  label="Mesa *"
-                  value={selectedTableName}
-                  onPress={() => setTableMenuVisible(true)}
-                  isLoading={isLoadingTables}
-                  error={!!tableError || !!errorTables}
-                  disabled={
-                    !selectedAreaId ||
-                    isLoadingTables ||
-                    isLoadingAreas ||
-                    isTemporaryTable
-                  }
-                />
+            <ThemeDropdown
+              label="Mesa"
+              value={selectedTableId}
+              options={tableOptions}
+              onSelect={handleTableSelect}
+              onOpen={handleTableOpen}
+              loading={isLoadingTables}
+              disabled={
+                !selectedAreaId ||
+                isLoadingTables ||
+                isLoadingAreas ||
+                isTemporaryTable
               }
-            >
-              {tablesData?.map((table: Table) => {
-                const isCurrentTable =
-                  isEditMode && selectedTableId === table.id;
-                const canSelect = table.isAvailable || isCurrentTable;
-
-                return (
-                  <Menu.Item
-                    key={table.id}
-                    onPress={() => {
-                      if (canSelect) {
-                        setSelectedTableId(table.id);
-                        setTableMenuVisible(false);
-                        setTableError(null);
-                      }
-                    }}
-                    title={`${table.name}${!table.isAvailable && !isCurrentTable ? ' (Ocupada)' : ''}`}
-                    disabled={!canSelect}
-                    titleStyle={
-                      !canSelect ? { color: theme.colors.error } : undefined
-                    }
-                  />
-                );
-              })}
-              {selectedAreaId &&
-                tablesData?.length === 0 &&
-                !isLoadingTables &&
-                !errorTables && <Menu.Item title="No hay mesas" disabled />}
-              {errorTables && (
-                <Menu.Item title="Error al cargar mesas" disabled />
-              )}
-            </Menu>
-            {tableError && !errorTables && !isTemporaryTable && (
-              <HelperText type="error" visible={true} style={styles.helperText}>
-                {tableError}
-              </HelperText>
-            )}
-            {errorTables && (
-              <HelperText type="error" visible={true} style={styles.helperText}>
-                Error al cargar mesas
-              </HelperText>
-            )}
+              error={!!tableError || !!errorTables}
+              helperText={
+                !isTemporaryTable ? (
+                  tableError || (errorTables ? 'Error al cargar mesas' : 
+                  selectedAreaId && tableOptions.length === 0 && !isLoadingTables ? 
+                  'No hay mesas disponibles en esta área' : undefined)
+                ) : undefined
+              }
+              required
+              placeholder="Selecciona una mesa"
+            />
           </View>
         </View>
 
-        <View style={[styles.section, styles.fieldContainer]}>
+        <View style={styles.checkboxSection}>
           <TouchableOpacity
             onPress={() => {
               setIsTemporaryTable(!isTemporaryTable);
@@ -263,7 +260,7 @@ export const DineInForm = forwardRef<DineInFormRef, DineInFormProps>(
                 <HelperText
                   type="error"
                   visible={true}
-                  style={styles.helperText}
+                  style={{ fontSize: 12, marginTop: 4 }}
                 >
                   {tableError}
                 </HelperText>
@@ -272,7 +269,7 @@ export const DineInForm = forwardRef<DineInFormRef, DineInFormProps>(
           )}
         </View>
 
-        <View style={[styles.section, styles.fieldContainer]}>
+        <View style={styles.section}>
           <SpeechRecognitionInput
             key="notes-input-dine-in"
             label="Notas de la Orden (Opcional)"
@@ -283,7 +280,7 @@ export const DineInForm = forwardRef<DineInFormRef, DineInFormProps>(
           />
         </View>
 
-        <View style={[styles.section, styles.fieldContainer]}>
+        <View style={styles.section}>
           <AnimatedLabelSelector
             label="Programar Hora (Opcional)"
             value={formattedScheduledTime}
@@ -291,7 +288,7 @@ export const DineInForm = forwardRef<DineInFormRef, DineInFormProps>(
             onClear={handleScheduleTimeClear}
           />
         </View>
-      </>
+      </View>
     );
   },
 );
@@ -300,43 +297,40 @@ DineInForm.displayName = 'DineInForm';
 
 const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
   StyleSheet.create({
+    container: {
+      flex: 1,
+    },
     selectorsRow: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
+      gap: theme.spacing.s,
+      marginBottom: theme.spacing.s,
       paddingHorizontal: theme.spacing.xs,
-      marginBottom: theme.spacing.xs,
     },
     selectorContainer: {
       flex: 1,
-      marginHorizontal: theme.spacing.xxs,
     },
     section: {
-      paddingVertical: theme.spacing.xs,
+      marginBottom: theme.spacing.m,
       paddingHorizontal: theme.spacing.xs,
-      marginBottom: theme.spacing.xs,
     },
-    fieldContainer: {
-      marginBottom: theme.spacing.xs,
-    },
-    helperText: {
-      fontSize: 12,
-      paddingHorizontal: 0,
-      paddingTop: 0,
-      marginTop: -4,
+    checkboxSection: {
+      marginBottom: theme.spacing.m,
+      paddingHorizontal: theme.spacing.xs,
+      marginTop: -theme.spacing.xs,
     },
     checkboxContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginTop: theme.spacing.s,
-      marginBottom: theme.spacing.xs,
+      paddingVertical: theme.spacing.xs,
+      paddingHorizontal: theme.spacing.xs,
     },
     checkboxLabel: {
       fontSize: 16,
-      marginLeft: theme.spacing.xs,
+      marginLeft: theme.spacing.s,
       color: theme.colors.onSurface,
+      flex: 1,
     },
     temporaryTableInputContainer: {
-      marginTop: theme.spacing.xs,
-      marginBottom: theme.spacing.s,
+      marginTop: theme.spacing.s,
     },
   });

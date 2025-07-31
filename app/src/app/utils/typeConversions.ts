@@ -1,7 +1,3 @@
-/**
- * Mapea Order a OrderOpenList agregando propiedades calculadas
- * Nota: El backend ahora envía todos los campos numéricos como números
- */
 export const mapOrderToOrderOpenList = (order: any): any => {
   const totalPaid =
     order.payments?.reduce(
@@ -9,17 +5,11 @@ export const mapOrderToOrderOpenList = (order: any): any => {
       0,
     ) || 0;
 
-  // Mapear preparationScreenStatuses al formato esperado
-  const preparationScreenStatuses = order.preparationScreenStatuses?.map(
-    (status: any) => ({
-      name: status.preparationScreenName || status.name,
-      status: status.status,
-    }),
-  );
+  const preparationScreenStatuses = order.preparationScreenStatuses;
 
   return {
     ...order,
-    orderNumber: order.id, // Usar ID como orderNumber si no existe
+    orderNumber: order.id,
     shiftOrderNumber: order.shiftOrderNumber || 0,
     totalAmount: order.total || order.totalAmount || 0,
     tableNumber: order.table?.isTemporary ? null : order.table?.name || 0,

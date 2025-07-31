@@ -53,18 +53,36 @@ export const TakeAwayForm = forwardRef<TakeAwayFormRef, TakeAwayFormProps>(
 
     React.useEffect(() => {
       if (deliveryInfo.recipientPhone?.trim()) {
+        const phoneDigits = deliveryInfo.recipientPhone.replace(/\D/g, '');
+        if (phoneDigits.length >= 10) {
+          setRecipientPhoneError(null);
+        }
+      } else {
         setRecipientPhoneError(null);
       }
     }, [deliveryInfo.recipientPhone]);
     const validate = useCallback(() => {
       let isValid = true;
+
+      // Validar nombre (requerido)
       if (!deliveryInfo.recipientName?.trim()) {
         setRecipientNameError('Por favor ingresa el nombre del cliente');
         isValid = false;
       }
 
+      // Validar teléfono (opcional, pero si se ingresa debe ser válido)
+      if (deliveryInfo.recipientPhone?.trim()) {
+        const phoneDigits = deliveryInfo.recipientPhone.replace(/\D/g, '');
+        if (phoneDigits.length < 10) {
+          setRecipientPhoneError(
+            'El número de teléfono debe tener al menos 10 dígitos',
+          );
+          isValid = false;
+        }
+      }
+
       return isValid;
-    }, [deliveryInfo.recipientName]);
+    }, [deliveryInfo.recipientName, deliveryInfo.recipientPhone]);
     useImperativeHandle(
       ref,
       () => ({
@@ -97,36 +115,40 @@ export const TakeAwayForm = forwardRef<TakeAwayFormRef, TakeAwayFormProps>(
         </View>
 
         <View style={[styles.section, styles.fieldContainer]}>
-          <View style={styles.phoneInputWrapper}>
-            <SpeechRecognitionInput
-              key="phone-input-takeaway"
-              label="Teléfono (Opcional)"
-              value={deliveryInfo.recipientPhone || ''}
-              onChangeText={(text) => {
-                setDeliveryInfo({ ...deliveryInfo, recipientPhone: text });
-                if (recipientPhoneError) setRecipientPhoneError(null);
-              }}
-              keyboardType="phone-pad"
-              error={!!recipientPhoneError}
-              speechLang="es-MX"
-              autoCorrect={false}
-            />
-            {(deliveryInfo.recipientPhone || '').length > 0 &&
-              !recipientPhoneError && (
-                <Text style={styles.digitCounterAbsolute}>
+          <SpeechRecognitionInput
+            key="phone-input-takeaway"
+            label="Teléfono (Opcional)"
+            value={deliveryInfo.recipientPhone || ''}
+            onChangeText={(text) => {
+              setDeliveryInfo({ ...deliveryInfo, recipientPhone: text });
+              if (recipientPhoneError) setRecipientPhoneError(null);
+            }}
+            keyboardType="phone-pad"
+            error={!!recipientPhoneError}
+            speechLang="es-MX"
+            autoCorrect={false}
+          />
+          <View style={styles.phoneHelperContainer}>
+            {recipientPhoneError ? (
+              <HelperText
+                type="error"
+                visible={true}
+                style={[styles.helperText, styles.recipientPhoneError]}
+              >
+                {recipientPhoneError}
+              </HelperText>
+            ) : (
+              (deliveryInfo.recipientPhone || '').length > 0 && (
+                <Text style={styles.digitCounter}>
                   {
                     (deliveryInfo.recipientPhone || '').replace(/\D/g, '')
                       .length
                   }{' '}
                   dígitos
                 </Text>
-              )}
+              )
+            )}
           </View>
-          {recipientPhoneError && (
-            <HelperText type="error" visible={true} style={styles.helperText}>
-              {recipientPhoneError}
-            </HelperText>
-          )}
         </View>
 
         <View style={[styles.section, styles.fieldContainer]}>
@@ -171,14 +193,15 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
       paddingTop: 0,
       marginTop: -4,
     },
-    phoneInputWrapper: {
-      position: 'relative',
+    phoneHelperContainer: {
+      marginTop: 2,
     },
-    digitCounterAbsolute: {
-      position: 'absolute',
-      right: 12,
-      bottom: 20,
+    recipientPhoneError: {
+      marginBottom: 0,
+    },
+    digitCounter: {
       fontSize: 12,
       color: theme.colors.onSurfaceVariant,
+      marginLeft: 14,
     },
   });
