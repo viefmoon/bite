@@ -15,6 +15,7 @@ import { OrderType } from '../domain/enums/order-type.enum';
 import { Type } from 'class-transformer';
 import { OrderItemInputDto } from './order-item-input.dto';
 import { DeliveryInfoDto } from './delivery-info.dto';
+import { CreateOrderAdjustmentDto } from './create-order-adjustment.dto';
 
 export class CreateOrderDto {
   @ApiProperty({
@@ -187,4 +188,14 @@ export class CreateOrderDto {
   @IsOptional()
   @IsUUID()
   prepaymentId?: string;
+
+  @ApiProperty({
+    type: [CreateOrderAdjustmentDto],
+    description: 'Ajustes de la orden (descuentos, cargos adicionales, etc.)',
+    required: false,
+  })
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => CreateOrderAdjustmentDto)
+  adjustments?: CreateOrderAdjustmentDto[];
 }

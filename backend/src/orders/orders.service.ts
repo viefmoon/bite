@@ -50,6 +50,7 @@ import { AutomaticPrintingService } from '../thermal-printers/automatic-printing
 import { ShiftsService } from '../shifts/shifts.service';
 import { ThermalPrintersService } from '../thermal-printers/thermal-printers.service';
 import { ThermalPrinter } from '../thermal-printers/domain/thermal-printer';
+import { AdjustmentsService } from '../adjustments/adjustments.service';
 
 @Injectable()
 export class OrdersService {
@@ -78,6 +79,7 @@ export class OrdersService {
     private readonly automaticPrintingService: AutomaticPrintingService,
     @Inject(forwardRef(() => ThermalPrintersService))
     private readonly thermalPrintersService: ThermalPrintersService,
+    private readonly adjustmentsService: AdjustmentsService,
   ) {}
 
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
@@ -238,6 +240,28 @@ export class OrdersService {
         // Ya que la orden ya fue creada exitosamente
         this.logger.error(
           `Error asociando pre-pago ${createOrderDto.prepaymentId} a orden ${order.id}:`,
+          error,
+        );
+      }
+    }
+
+    // Crear adjustments si se proporcionaron
+    if (createOrderDto.adjustments && createOrderDto.adjustments.length > 0) {
+      try {
+        const adjustmentDtos = createOrderDto.adjustments.map((adj) => ({
+          orderId: order.id,
+          name: adj.name,
+          isPercentage: adj.isPercentage,
+          value: adj.isPercentage ? (adj.value || 0) : 0,
+          amount: !adj.isPercentage ? (adj.amount || 0) : 0,
+        }));
+
+        await this.adjustmentsService.applyBulkAdjustments(adjustmentDtos);
+      } catch (error) {
+        // Si falla la creación de adjustments, registrar el error pero continuar
+        // Ya que la orden ya fue creada exitosamente
+        this.logger.error(
+          `Error creando adjustments para orden ${order.id}:`,
           error,
         );
       }

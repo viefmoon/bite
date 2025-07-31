@@ -17,6 +17,7 @@ import { PizzaPriceCalculatorService } from './services/pizza-price-calculator.s
 import { RestaurantConfigModule } from '../restaurant-config/restaurant-config.module';
 import { ShiftsModule } from '../shifts/shifts.module';
 import { ThermalPrintersModule } from '../thermal-printers/thermal-printers.module';
+import { AdjustmentsModule } from '../adjustments/adjustments.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { ThermalPrintersModule } from '../thermal-printers/thermal-printers.modu
     RestaurantConfigModule,
     forwardRef(() => ShiftsModule),
     forwardRef(() => ThermalPrintersModule),
+    AdjustmentsModule,
   ],
   controllers: [OrdersController],
   providers: [
