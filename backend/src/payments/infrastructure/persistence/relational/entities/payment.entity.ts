@@ -21,7 +21,7 @@ export class PaymentEntity extends EntityRelationalHelper {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @RelationId((payment: PaymentEntity) => payment.order)
+  @Column({ type: 'uuid', nullable: true, name: 'order_id' })
   orderId: string | null;
 
   @Column({

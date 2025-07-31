@@ -82,6 +82,9 @@ export class RelationalPaymentRepository implements PaymentRepository {
     if (payment.paymentStatus !== undefined) {
       updateData.paymentStatus = payment.paymentStatus;
     }
+    if (payment.orderId !== undefined) {
+      updateData.orderId = payment.orderId;
+    }
 
     await this.paymentRepository.update(id, updateData);
 
