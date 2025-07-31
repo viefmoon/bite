@@ -352,7 +352,10 @@ export const formatPizzaCustomizations = (
     type: 'FLAVOR' | 'INGREDIENT';
   }>,
 ): string => {
-  if (!selectedPizzaCustomizations || selectedPizzaCustomizations.length === 0) {
+  if (
+    !selectedPizzaCustomizations ||
+    selectedPizzaCustomizations.length === 0
+  ) {
     return '';
   }
 
@@ -381,12 +384,16 @@ export const formatPizzaCustomizations = (
 
     customizations.forEach((customization) => {
       let customData = null;
-      
+
       if (customization.pizzaCustomization) {
         customData = customization.pizzaCustomization;
       }
-      
-      if (!customData && pizzaCustomizationsData && Array.isArray(pizzaCustomizationsData)) {
+
+      if (
+        !customData &&
+        pizzaCustomizationsData &&
+        Array.isArray(pizzaCustomizationsData)
+      ) {
         customData = pizzaCustomizationsData.find(
           (c) => c.id === customization.pizzaCustomizationId,
         );
@@ -427,14 +434,14 @@ export const formatPizzaCustomizations = (
     return formatHalf(fullPizza);
   }
   const halfParts: string[] = [];
-  
+
   if (half1.length > 0) {
     const half1Formatted = formatHalf(half1);
     if (half1Formatted) {
       halfParts.push(half1Formatted);
     }
   }
-  
+
   if (half2.length > 0) {
     const half2Formatted = formatHalf(half2);
     if (half2Formatted) {

@@ -53,6 +53,8 @@ import {
 } from './order-cart';
 import { modalHelpers } from '../stores/useModalStore';
 import { useOrderFormStore } from '../stores/useOrderFormStore';
+import { UnifiedOrderDetailsModal } from '@/modules/shared/components/UnifiedOrderDetailsModal';
+import { cleanupOrderState } from '../utils/orderStateUtils';
 
 interface OrderCartDetailProps {
   visible: boolean;
@@ -99,6 +101,10 @@ const useOrderCart = ({
   const [editingItemProductId, setEditingItemProductId] = useState<
     string | null
   >(null);
+  const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
+  const [selectedOrderIdForDetails, setSelectedOrderIdForDetails] = useState<
+    string | null
+  >(null);
   const {
     items,
     orderType,
@@ -125,6 +131,7 @@ const useOrderCart = ({
     loadOrderForEditing,
   } = useOrderManagement();
 
+
   const subtotal = useOrderSubtotal();
   const total = useOrderTotal();
   const totalItemsCount = useOrderItemsCount();
@@ -133,7 +140,6 @@ const useOrderCart = ({
     data: orderData,
     isLoading: isLoadingOrder,
     isError: isErrorOrder,
-    refetch: refetchOrder,
   } = useGetOrderByIdQuery(orderId, {
     enabled: isEditMode && !!orderId && visible,
   });
@@ -466,6 +472,8 @@ const useOrderCart = ({
           message: 'Cambios guardados exitosamente',
           type: 'success',
         });
+        // Limpiar el estado después de guardar cambios exitosamente
+        cleanupOrderState();
         onClose?.();
       }
     } catch (error) {
@@ -495,8 +503,13 @@ const useOrderCart = ({
     if (!visible) {
       setHasLoadedOrder(false);
       setEditingItemProductId(null);
+      
+      // Limpiar el estado del carrito cuando se cierre el modal en modo edición
+      if (isEditMode && hasLoadedOrder) {
+        cleanupOrderState();
+      }
     }
-  }, [visible]);
+  }, [visible, isEditMode, hasLoadedOrder]);
   useEffect(() => {
     if (editingProduct && editingItemProductId && !isLoadingEditingProduct) {
       const itemToEdit = items.find(
@@ -584,6 +597,10 @@ const useOrderCart = ({
     removeAdjustment,
     confirmOrder,
     loadOrderForEditing,
+    isDetailModalVisible,
+    setIsDetailModalVisible,
+    selectedOrderIdForDetails,
+    setSelectedOrderIdForDetails,
     theme,
   };
 };
@@ -641,6 +658,8 @@ const OrderCartHeader: React.FC<{
   onClose?: () => void;
   onCancelOrder?: () => void;
   orderId?: string | null;
+  setSelectedOrderIdForDetails: (id: string | null) => void;
+  setIsDetailModalVisible: (visible: boolean) => void;
   theme: any;
 }> = ({
   isEditMode,
@@ -655,6 +674,8 @@ const OrderCartHeader: React.FC<{
   onClose,
   onCancelOrder,
   orderId,
+  setSelectedOrderIdForDetails,
+  setIsDetailModalVisible,
   theme,
 }) => {
   const styles = useMemo(
@@ -703,7 +724,12 @@ const OrderCartHeader: React.FC<{
           onPress={() => {
             if (hasUnsavedChanges) {
               modalHelpers.showExitConfirmation({
-                onClose,
+                onClose: () => {
+                  if (isEditMode) {
+                    cleanupOrderState();
+                  }
+                  onClose?.();
+                },
               });
             } else {
               onClose?.();
@@ -754,25 +780,11 @@ const OrderCartHeader: React.FC<{
           <Menu.Item
             onPress={() => {
               setShowOptionsMenu(false);
-              modalHelpers.showOrderDetail({
-                orderId: orderId || null,
-                orderNumber,
-                orderData,
-              });
+              setSelectedOrderIdForDetails(orderId || null);
+              setIsDetailModalVisible(true);
             }}
             title="Ver Detalles"
             leadingIcon="file-document-outline"
-          />
-          <Menu.Item
-            onPress={() => {
-              setShowOptionsMenu(false);
-              modalHelpers.showOrderHistory({
-                orderId: orderId || null,
-                orderNumber,
-              });
-            }}
-            title="Ver Historial"
-            leadingIcon="history"
           />
           <Menu.Item
             onPress={() => {
@@ -799,6 +811,10 @@ const OrderCartHeader: React.FC<{
             onClose,
           });
         } else {
+          // Si está en modo edición, limpiar el estado antes de cerrar
+          if (isEditMode) {
+            cleanupOrderState();
+          }
           onClose?.();
         }
       }}
@@ -1183,6 +1199,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = (props) => {
     handleUpdateAdjustment,
     handleRemoveAdjustment,
     addItem,
+    isDetailModalVisible,
+    setIsDetailModalVisible,
+    selectedOrderIdForDetails,
+    setSelectedOrderIdForDetails,
     theme,
   } = useOrderCart(props);
 
@@ -1194,7 +1214,12 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = (props) => {
       <Portal>
         <Modal
           visible={visible}
-          onDismiss={onClose}
+          onDismiss={() => {
+            if (isEditMode) {
+              cleanupOrderState();
+            }
+            onClose?.();
+          }}
           contentContainerStyle={styles.modalContent}
         >
           <View style={[styles.container, styles.loadingContainer]}>
@@ -1211,7 +1236,12 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = (props) => {
       <Portal>
         <Modal
           visible={visible}
-          onDismiss={onClose}
+          onDismiss={() => {
+            if (isEditMode) {
+              cleanupOrderState();
+            }
+            onClose?.();
+          }}
           contentContainerStyle={styles.errorModalContent}
         >
           <View style={styles.errorModalContainer}>
@@ -1273,6 +1303,10 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = (props) => {
               onClose,
             });
           } else {
+            // Si está en modo edición, limpiar el estado antes de cerrar
+            if (isEditMode) {
+              cleanupOrderState();
+            }
             onClose?.();
           }
         }}
@@ -1302,6 +1336,8 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = (props) => {
               onClose={onClose}
               onCancelOrder={onCancelOrder}
               orderId={orderId}
+              setSelectedOrderIdForDetails={setSelectedOrderIdForDetails}
+              setIsDetailModalVisible={setIsDetailModalVisible}
               theme={theme}
             />
 
@@ -1344,6 +1380,18 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = (props) => {
 
             <ModalsContainer />
           </View>
+
+          <UnifiedOrderDetailsModal
+            visible={isDetailModalVisible}
+            onDismiss={() => {
+              setIsDetailModalVisible(false);
+              setSelectedOrderIdForDetails(null);
+            }}
+            orderId={selectedOrderIdForDetails}
+            orderNumber={orderNumber}
+            dataSource="finalization"
+            showHistoryButton={true}
+          />
 
           <View style={styles.footer}>
             <View style={styles.buttonRow}>

@@ -38,6 +38,7 @@ import { orderPrintService } from '../services/orderPrintService';
 import OrderCartDetail from '../components/OrderCartDetail';
 import { useListState } from '../../../app/hooks/useListState';
 import { formatOrderType, OrderStatusInfo } from '../utils/formatters';
+import { cleanupOrderState } from '../utils/orderStateUtils';
 
 type OpenOrdersScreenProps = NativeStackScreenProps<
   OrdersStackParamList,
@@ -412,6 +413,8 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
             }
             navigation={navigation}
             onClose={() => {
+              // Limpiar el estado del carrito cuando se cierre el modal de edición
+              cleanupOrderState();
               setIsEditModalVisible(false);
               setEditingOrderId(null);
             }}

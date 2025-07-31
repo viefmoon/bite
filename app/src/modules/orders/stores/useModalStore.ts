@@ -1,20 +1,17 @@
 import { create } from 'zustand';
-import type { 
-  ModalType, 
-  ModalConfig, 
+import type {
+  ModalType,
+  ModalConfig,
   ModalPropsForType,
   TimePickerModalProps,
-  TimeAlertModalProps,
   ExitConfirmationModalProps,
   CancelConfirmationModalProps,
   ModifyInProgressConfirmationModalProps,
   DeletePrepaymentConfirmModalProps,
   ProductCustomizationModalProps,
-  OrderDetailModalProps,
-  OrderHistoryModalProps,
   PaymentModalProps,
   AdjustmentModalProps,
-  PrepaymentModalProps
+  PrepaymentModalProps,
 } from '../types/modal.types';
 
 interface ModalState {
@@ -26,10 +23,10 @@ interface ModalState {
 interface ModalActions {
   showModal: <T extends Exclude<ModalType, null>>(
     type: T,
-    props: ModalPropsForType<T>
+    props: ModalPropsForType<T>,
   ) => void;
   hideModal: () => void;
-  updateModalProps: (props: Partial<ModalConfig['props']>) => void;
+  updateModalProps: (props: any) => void;
 }
 
 export interface ModalStore extends ModalState, ModalActions {}
@@ -41,7 +38,7 @@ export const useModalStore = create<ModalStore>((set) => ({
 
   showModal: <T extends Exclude<ModalType, null>>(
     type: T,
-    props: ModalPropsForType<T>
+    props: ModalPropsForType<T>,
   ) => {
     set({
       modalType: type,
@@ -58,7 +55,7 @@ export const useModalStore = create<ModalStore>((set) => ({
     });
   },
 
-  updateModalProps: (props: Partial<ModalConfig['props']>) => {
+  updateModalProps: (props: any) => {
     set((state) => ({
       modalProps: { ...state.modalProps, ...props },
     }));
@@ -70,8 +67,8 @@ export const modalHelpers = {
     useModalStore.getState().showModal('timePicker', props);
   },
 
-  showTimeAlert: (props: TimeAlertModalProps = {}) => {
-    useModalStore.getState().showModal('timeAlert', props);
+  showTimeAlert: () => {
+    useModalStore.getState().showModal('timeAlert', {});
   },
 
   showExitConfirmation: (props: ExitConfirmationModalProps) => {
@@ -82,7 +79,9 @@ export const modalHelpers = {
     useModalStore.getState().showModal('cancelConfirmation', props);
   },
 
-  showModifyInProgressConfirmation: (props: ModifyInProgressConfirmationModalProps) => {
+  showModifyInProgressConfirmation: (
+    props: ModifyInProgressConfirmationModalProps,
+  ) => {
     useModalStore.getState().showModal('modifyInProgressConfirmation', props);
   },
 
@@ -92,14 +91,6 @@ export const modalHelpers = {
 
   showProductCustomization: (props: ProductCustomizationModalProps) => {
     useModalStore.getState().showModal('productCustomization', props);
-  },
-
-  showOrderDetail: (props: OrderDetailModalProps) => {
-    useModalStore.getState().showModal('orderDetail', props);
-  },
-
-  showOrderHistory: (props: OrderHistoryModalProps) => {
-    useModalStore.getState().showModal('orderHistory', props);
   },
 
   showPayment: (props: PaymentModalProps) => {

@@ -9,10 +9,6 @@ export interface TimePickerModalProps {
   hideTimePicker: () => void;
 }
 
-export interface TimeAlertModalProps {
-  // No requiere props específicas
-}
-
 export interface ExitConfirmationModalProps {
   onClose?: () => void;
 }
@@ -48,12 +44,6 @@ export interface ProductCustomizationModalProps {
     selectedPizzaCustomizations?: any[],
     pizzaExtraCost?: number,
   ) => void;
-}
-
-export interface OrderDetailModalProps {
-  orderId: string | null;
-  orderNumber?: number;
-  orderData?: any;
 }
 
 export interface OrderHistoryModalProps {
@@ -100,22 +90,26 @@ export interface PrepaymentModalProps {
 // Unión discriminada de todos los tipos de modales
 export type ModalConfig =
   | { type: 'timePicker'; props: TimePickerModalProps }
-  | { type: 'timeAlert'; props: TimeAlertModalProps }
+  | { type: 'timeAlert'; props: Record<string, never> }
   | { type: 'exitConfirmation'; props: ExitConfirmationModalProps }
   | { type: 'cancelConfirmation'; props: CancelConfirmationModalProps }
-  | { type: 'modifyInProgressConfirmation'; props: ModifyInProgressConfirmationModalProps }
-  | { type: 'deletePrepaymentConfirm'; props: DeletePrepaymentConfirmModalProps }
+  | {
+      type: 'modifyInProgressConfirmation';
+      props: ModifyInProgressConfirmationModalProps;
+    }
+  | {
+      type: 'deletePrepaymentConfirm';
+      props: DeletePrepaymentConfirmModalProps;
+    }
   | { type: 'productCustomization'; props: ProductCustomizationModalProps }
-  | { type: 'orderDetail'; props: OrderDetailModalProps }
-  | { type: 'orderHistory'; props: OrderHistoryModalProps }
   | { type: 'payment'; props: PaymentModalProps }
   | { type: 'adjustment'; props: AdjustmentModalProps }
   | { type: 'prepayment'; props: PrepaymentModalProps }
-  | { type: null; props: {} };
+  | { type: null; props: Record<string, never> };
 
 // Tipo helper para extraer las props de un tipo específico de modal
 export type ModalPropsForType<T extends ModalConfig['type']> = T extends null
-  ? {}
+  ? Record<string, never>
   : Extract<ModalConfig, { type: T }>['props'];
 
 // Tipo de modal disponibles
