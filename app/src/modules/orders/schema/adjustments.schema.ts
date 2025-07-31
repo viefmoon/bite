@@ -13,11 +13,11 @@ export const orderAdjustmentSchema = z.object({
 
 export type OrderAdjustment = z.infer<typeof orderAdjustmentSchema>;
 
-export const adjustmentFormDataSchema = z.object({
-  name: z.string().min(1, 'El nombre es requerido'),
-  isPercentage: z.boolean(),
-  value: z.number().min(0).max(100).optional(),
-  amount: z.number().optional(),
+export const adjustmentFormDataSchema = orderAdjustmentSchema.pick({
+  name: true,
+  isPercentage: true,
+  value: true,
+  amount: true,
 });
 
 export type AdjustmentFormData = z.infer<typeof adjustmentFormDataSchema>;

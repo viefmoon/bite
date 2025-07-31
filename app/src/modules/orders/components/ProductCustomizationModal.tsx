@@ -90,6 +90,22 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
       setSelectedPizzaCustomizations,
       control,
       watchedPreparationNotes,
+      flavors,
+      ingredients,
+      selectedFlavors,
+      getFlavorName,
+      showHalvesMode,
+      handleFlavorToggle,
+      toggleIngredient,
+      isIngredientSelected,
+      manualHalvesMode,
+      handleManualHalvesModeToggle,
+      expandedIngredients,
+      expandedFlavors,
+      toggleExpandedFlavors,
+      toggleExpandedIngredients,
+      PIZZA_HALF,
+      CUSTOMIZATION_ACTION,
     } = useProductCustomization({
       product,
       editingItem,
@@ -334,17 +350,24 @@ const ProductCustomizationModal = memo<ProductCustomizationModalProps>(
                       </View>
                     )}
                     <PizzaCustomizationSection
-                      pizzaCustomizations={pizzaCustomizations}
-                      pizzaConfiguration={pizzaConfiguration}
+                      flavors={flavors}
+                      ingredients={ingredients}
+                      selectedFlavors={selectedFlavors}
                       selectedPizzaCustomizations={selectedPizzaCustomizations}
-                      onCustomizationChange={(customizations) => {
-                        // Filtrar solo los objetos que son SelectedPizzaCustomization completos
-                        const fullCustomizations = customizations.filter(
-                          (c): c is SelectedPizzaCustomization =>
-                            'id' in c && 'createdAt' in c,
-                        );
-                        setSelectedPizzaCustomizations(fullCustomizations);
-                      }}
+                      pizzaConfiguration={pizzaConfiguration}
+                      getFlavorName={getFlavorName}
+                      showHalvesMode={showHalvesMode}
+                      handleFlavorToggle={handleFlavorToggle}
+                      toggleIngredient={toggleIngredient}
+                      isIngredientSelected={isIngredientSelected}
+                      manualHalvesMode={manualHalvesMode}
+                      handleManualHalvesModeToggle={handleManualHalvesModeToggle}
+                      expandedIngredients={expandedIngredients}
+                      expandedFlavors={expandedFlavors}
+                      toggleExpandedFlavors={toggleExpandedFlavors}
+                      toggleExpandedIngredients={toggleExpandedIngredients}
+                      PIZZA_HALF={PIZZA_HALF}
+                      CUSTOMIZATION_ACTION={CUSTOMIZATION_ACTION}
                       loading={false}
                     />
                   </Card.Content>

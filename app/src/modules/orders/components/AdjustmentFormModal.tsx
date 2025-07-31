@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, Button, TextInput, HelperText, Chip } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
@@ -24,6 +24,41 @@ export const AdjustmentFormModal: React.FC<AdjustmentFormModalProps> = ({
   orderSubtotal,
 }) => {
   const theme = useAppTheme();
+
+  const styles = useMemo(() => StyleSheet.create({
+    input: {
+      marginBottom: 12,
+    },
+    configContainer: {
+      marginBottom: 8,
+    },
+    label: {
+      marginBottom: 6,
+      fontWeight: '500',
+      fontSize: 14,
+    },
+    chipGroup: {
+      flexDirection: 'row',
+      gap: 8,
+      marginBottom: 8,
+    },
+    chip: {
+      flex: 1,
+      height: 36,
+    },
+    operationButtons: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    operationButton: {
+      flex: 1,
+      minHeight: 40,
+    },
+    valueFieldContainer: {
+      paddingBottom: 4,
+      paddingTop: 8,
+    },
+  }), []);
 
   // Estado del formulario
   const [formData, setFormData] = useState<AdjustmentFormData>({
@@ -365,38 +400,3 @@ export const AdjustmentFormModal: React.FC<AdjustmentFormModalProps> = ({
     </ResponsiveModal>
   );
 };
-
-const styles = StyleSheet.create({
-  input: {
-    marginBottom: 12,
-  },
-  configContainer: {
-    marginBottom: 8,
-  },
-  label: {
-    marginBottom: 6,
-    fontWeight: '500',
-    fontSize: 14,
-  },
-  chipGroup: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 8,
-  },
-  chip: {
-    flex: 1,
-    height: 36,
-  },
-  operationButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  operationButton: {
-    flex: 1,
-    minHeight: 40,
-  },
-  valueFieldContainer: {
-    paddingBottom: 4,
-    paddingTop: 8,
-  },
-});

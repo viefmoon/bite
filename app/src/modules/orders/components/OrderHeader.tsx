@@ -1,5 +1,6 @@
 import { StyleSheet, View } from 'react-native';
 import { Text, IconButton } from 'react-native-paper';
+import { useMemo } from 'react';
 import CartButton from './CartButton';
 import { useAppTheme } from '@/app/styles/theme';
 
@@ -20,7 +21,7 @@ const OrderHeader = ({
 }: OrderHeaderProps) => {
   const theme = useAppTheme();
 
-  const styles = StyleSheet.create({
+  const styles = useMemo(() => StyleSheet.create({
     header: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -41,7 +42,7 @@ const OrderHeader = ({
     headerSpacer: {
       width: 48,
     },
-  });
+  }), [theme]);
 
   return (
     <View style={styles.header}>

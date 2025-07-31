@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, Appbar } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -19,7 +19,7 @@ export const ShiftClosedView: React.FC<ShiftClosedViewProps> = ({
   const responsive = useResponsive();
   const { colors, fonts } = theme;
 
-  const styles = StyleSheet.create({
+  const styles = useMemo(() => StyleSheet.create({
     safeArea: {
       flex: 1,
       backgroundColor: colors.background,
@@ -54,7 +54,7 @@ export const ShiftClosedView: React.FC<ShiftClosedViewProps> = ({
       maxWidth: 320,
       lineHeight: 24,
     },
-  });
+  }), [colors, fonts, responsive]);
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>

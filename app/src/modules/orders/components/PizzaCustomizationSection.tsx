@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, memo } from 'react';
+import { useMemo, memo } from 'react';
 import { View, StyleSheet } from 'react-native';
 import {
   Text,
@@ -16,32 +16,36 @@ import type {
   PizzaCustomizationInput,
 } from '../../pizzaCustomizations/schema/pizzaCustomization.schema';
 import type { PizzaConfiguration } from '../../pizzaCustomizations/schema/pizzaConfiguration.schema';
-import { CustomizationTypeEnum } from '../../pizzaCustomizations/schema/pizzaCustomization.schema';
+import {
+  PizzaHalfEnum,
+  CustomizationActionEnum,
+} from '../../pizzaCustomizations/schema/pizzaCustomization.schema';
 import { useAppTheme } from '../../../app/styles/theme';
 
-// Extraer tipos del SelectedPizzaCustomization
-type PizzaHalf = SelectedPizzaCustomization['half'];
-type CustomizationAction = SelectedPizzaCustomization['action'];
-
-// Constantes para los valores
-const PIZZA_HALF = {
-  FULL: 'FULL' as PizzaHalf,
-  HALF_1: 'HALF_1' as PizzaHalf,
-  HALF_2: 'HALF_2' as PizzaHalf,
-} as const;
-
-const CUSTOMIZATION_ACTION = {
-  ADD: 'ADD' as CustomizationAction,
-  REMOVE: 'REMOVE' as CustomizationAction,
-} as const;
-
 interface PizzaCustomizationSectionProps {
-  pizzaCustomizations: PizzaCustomization[];
-  pizzaConfiguration: PizzaConfiguration | null;
+  // Props desde el hook
+  flavors: PizzaCustomization[];
+  ingredients: PizzaCustomization[];
+  selectedFlavors: SelectedPizzaCustomization[];
   selectedPizzaCustomizations: SelectedPizzaCustomization[];
-  onCustomizationChange: (
-    customizations: (SelectedPizzaCustomization | PizzaCustomizationInput)[],
-  ) => void;
+  pizzaConfiguration: PizzaConfiguration | null;
+  getFlavorName: (flavorId: string) => string;
+  showHalvesMode: boolean;
+  handleFlavorToggle: (flavorId: string) => void;
+  toggleIngredient: (ingredientId: string, half: SelectedPizzaCustomization['half'], action: SelectedPizzaCustomization['action']) => void;
+  isIngredientSelected: (ingredientId: string, half: SelectedPizzaCustomization['half'], action: SelectedPizzaCustomization['action']) => boolean;
+  manualHalvesMode: boolean;
+  handleManualHalvesModeToggle: (value: boolean) => void;
+  expandedIngredients: {
+    [PizzaHalfEnum.FULL]: boolean;
+    [PizzaHalfEnum.HALF_1]: boolean;
+    [PizzaHalfEnum.HALF_2]: boolean;
+  };
+  expandedFlavors: boolean;
+  toggleExpandedFlavors: () => void;
+  toggleExpandedIngredients: (section: SelectedPizzaCustomization['half']) => void;
+  PIZZA_HALF: typeof PizzaHalfEnum;
+  CUSTOMIZATION_ACTION: typeof CustomizationActionEnum;
   loading?: boolean;
 }
 
@@ -114,237 +118,29 @@ const FlavorItem = memo<FlavorItemProps>(
 
 const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
   ({
-    pizzaCustomizations,
-    pizzaConfiguration,
+    flavors,
+    ingredients,
+    selectedFlavors,
     selectedPizzaCustomizations,
-    onCustomizationChange,
+    pizzaConfiguration,
+    getFlavorName,
+    showHalvesMode,
+    handleFlavorToggle,
+    toggleIngredient,
+    isIngredientSelected,
+    manualHalvesMode,
+    handleManualHalvesModeToggle,
+    expandedIngredients,
+    expandedFlavors,
+    toggleExpandedFlavors,
+    toggleExpandedIngredients,
+    PIZZA_HALF,
+    CUSTOMIZATION_ACTION,
     loading = false,
   }) => {
     const theme = useAppTheme();
     const styles = useMemo(() => createStyles(theme), [theme]);
-    const [manualHalvesMode, setManualHalvesMode] = useState(false);
-    const [expandedIngredients, setExpandedIngredients] = useState<{
-      full: boolean;
-      half1: boolean;
-      half2: boolean;
-    }>({
-      full: false,
-      half1: false,
-      half2: false,
-    });
-    const [expandedFlavors, setExpandedFlavors] = useState(true);
 
-    // Separar sabores e ingredientes
-    const flavors = useMemo(
-      () =>
-        pizzaCustomizations.filter(
-          (c) => c.type === CustomizationTypeEnum.FLAVOR,
-        ),
-      [pizzaCustomizations],
-    );
-
-    const ingredients = useMemo(
-      () =>
-        pizzaCustomizations.filter(
-          (c) => c.type === CustomizationTypeEnum.INGREDIENT,
-        ),
-      [pizzaCustomizations],
-    );
-
-    // Obtener sabores seleccionados
-    const selectedFlavors = useMemo(
-      () =>
-        selectedPizzaCustomizations.filter(
-          (sc) =>
-            sc.action === CUSTOMIZATION_ACTION.ADD &&
-            flavors.some((f) => f.id === sc.pizzaCustomizationId),
-        ),
-      [selectedPizzaCustomizations, flavors],
-    );
-
-    // Obtener el nombre del sabor por ID
-    const getFlavorName = useCallback(
-      (flavorId: string) => {
-        const flavor = flavors.find((f) => f.id === flavorId);
-        return flavor?.name || '';
-      },
-      [flavors],
-    );
-
-    const handleFlavorToggle = useCallback(
-      (flavorId: string) => {
-        const isSelected = selectedPizzaCustomizations.some(
-          (sc) =>
-            sc.pizzaCustomizationId === flavorId &&
-            sc.action === CUSTOMIZATION_ACTION.ADD,
-        );
-
-        if (isSelected) {
-          // Deseleccionar
-          const remainingFlavorSelections = selectedPizzaCustomizations.filter(
-            (sc) =>
-              !(
-                sc.pizzaCustomizationId === flavorId &&
-                sc.action === CUSTOMIZATION_ACTION.ADD
-              ),
-          );
-
-          // Si queda solo un sabor después de deseleccionar, cambiar su half a FULL
-          const remainingFlavors = remainingFlavorSelections.filter(
-            (sc) =>
-              sc.action === CUSTOMIZATION_ACTION.ADD &&
-              flavors.some((f) => f.id === sc.pizzaCustomizationId),
-          );
-
-          if (remainingFlavors.length === 1) {
-            const otherFlavorId = remainingFlavors[0].pizzaCustomizationId;
-            const nonFlavorSelections = remainingFlavorSelections.filter(
-              (sc) =>
-                !flavors.some((f) => f.id === sc.pizzaCustomizationId) ||
-                sc.action !== CUSTOMIZATION_ACTION.ADD,
-            );
-
-            onCustomizationChange([
-              ...nonFlavorSelections,
-              {
-                pizzaCustomizationId: otherFlavorId,
-                half: PIZZA_HALF.FULL,
-                action: CUSTOMIZATION_ACTION.ADD,
-              },
-            ]);
-          } else {
-            onCustomizationChange(remainingFlavorSelections);
-          }
-        } else {
-          // Seleccionar
-          const currentFlavors = selectedPizzaCustomizations.filter(
-            (sc) =>
-              sc.action === CUSTOMIZATION_ACTION.ADD &&
-              flavors.some((f) => f.id === sc.pizzaCustomizationId),
-          );
-
-          if (currentFlavors.length >= 2) {
-            return; // No permitir más de 2
-          }
-
-          const nonFlavorSelections = selectedPizzaCustomizations.filter(
-            (sc) =>
-              !flavors.some((f) => f.id === sc.pizzaCustomizationId) ||
-              sc.action !== CUSTOMIZATION_ACTION.ADD,
-          );
-
-          if (currentFlavors.length === 0) {
-            // Primer sabor - va completo o a mitad 1 si está el modo manual
-            if (manualHalvesMode) {
-              onCustomizationChange([
-                ...nonFlavorSelections,
-                {
-                  pizzaCustomizationId: flavorId,
-                  half: PIZZA_HALF.HALF_1,
-                  action: CUSTOMIZATION_ACTION.ADD,
-                },
-              ]);
-            } else {
-              onCustomizationChange([
-                ...nonFlavorSelections,
-                {
-                  pizzaCustomizationId: flavorId,
-                  half: PIZZA_HALF.FULL,
-                  action: CUSTOMIZATION_ACTION.ADD,
-                },
-              ]);
-            }
-          } else if (currentFlavors.length === 1) {
-            // Segundo sabor - convertir a mitades
-            const existingFlavor = currentFlavors[0];
-
-            // Crear las nuevas customizaciones como mitades
-            const newCustomizations: (
-              | SelectedPizzaCustomization
-              | PizzaCustomizationInput
-            )[] = [
-              ...nonFlavorSelections,
-              {
-                pizzaCustomizationId: existingFlavor.pizzaCustomizationId,
-                half: PIZZA_HALF.HALF_1,
-                action: CUSTOMIZATION_ACTION.ADD,
-              },
-              {
-                pizzaCustomizationId: flavorId,
-                half: PIZZA_HALF.HALF_2,
-                action: CUSTOMIZATION_ACTION.ADD,
-              },
-            ];
-
-            onCustomizationChange(newCustomizations);
-          }
-        }
-      },
-      [
-        selectedPizzaCustomizations,
-        flavors,
-        onCustomizationChange,
-        manualHalvesMode,
-      ],
-    );
-
-    const toggleIngredient = useCallback(
-      (ingredientId: string, half: PizzaHalf, action: CustomizationAction) => {
-        const existingIndex = selectedPizzaCustomizations.findIndex(
-          (sc) =>
-            sc.pizzaCustomizationId === ingredientId &&
-            sc.half === half &&
-            sc.action === action,
-        );
-
-        let newSelections: (
-          | SelectedPizzaCustomization
-          | PizzaCustomizationInput
-        )[];
-
-        if (existingIndex >= 0) {
-          newSelections = selectedPizzaCustomizations.filter(
-            (_, index) => index !== existingIndex,
-          );
-        } else {
-          // Remover cualquier acción previa del mismo ingrediente en la misma mitad
-          newSelections = selectedPizzaCustomizations.filter(
-            (sc) =>
-              !(sc.pizzaCustomizationId === ingredientId && sc.half === half),
-          );
-
-          newSelections.push({
-            pizzaCustomizationId: ingredientId,
-            half,
-            action,
-          });
-        }
-
-        onCustomizationChange(newSelections);
-      },
-      [selectedPizzaCustomizations, onCustomizationChange],
-    );
-
-    const isIngredientSelected = useCallback(
-      (
-        ingredientId: string,
-        half: PizzaHalf,
-        action: CustomizationAction,
-      ): boolean => {
-        return selectedPizzaCustomizations.some(
-          (sc) =>
-            sc.pizzaCustomizationId === ingredientId &&
-            sc.half === half &&
-            sc.action === action,
-        );
-      },
-      [selectedPizzaCustomizations],
-    );
-
-    // Determinar si mostrar modo mitades (2 sabores o modo manual activado)
-    const showHalvesMode =
-      selectedFlavors.length === 2 ||
-      (manualHalvesMode && selectedFlavors.length <= 1);
 
     // Returns condicionales al final, después de todos los hooks
     if (loading) {
@@ -356,23 +152,17 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
       );
     }
 
-    if (!pizzaConfiguration || pizzaCustomizations.length === 0) {
+    if (!pizzaConfiguration || (flavors.length === 0 && ingredients.length === 0)) {
       return null;
     }
 
     // Renderizar sección de personalización
     const renderCustomizationSection = (
-      half: PizzaHalf,
+      half: SelectedPizzaCustomization['half'],
       sectionTitle: string,
       flavorName?: string,
     ) => {
-      const sectionKey =
-        half === PIZZA_HALF.FULL
-          ? 'full'
-          : half === PIZZA_HALF.HALF_1
-            ? 'half1'
-            : 'half2';
-      const isExpanded = expandedIngredients[sectionKey];
+      const isExpanded = expandedIngredients[half];
 
       // Construir el título dinámico con el formato completo
       const getDynamicTitle = () => {
@@ -431,12 +221,7 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
 
             <Surface style={styles.subsectionSurface} elevation={1}>
               <TouchableRipple
-                onPress={() =>
-                  setExpandedIngredients((prev) => ({
-                    ...prev,
-                    [sectionKey]: !prev[sectionKey],
-                  }))
-                }
+                onPress={() => toggleExpandedIngredients(half)}
                 style={styles.subsectionTouchableStyle}
               >
                 <View style={styles.subsectionHeader}>
@@ -583,7 +368,7 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
         <Card style={styles.optionCard}>
           <Card.Content style={styles.cardContentStyle}>
             <TouchableRipple
-              onPress={() => setExpandedFlavors(!expandedFlavors)}
+              onPress={toggleExpandedFlavors}
               style={[
                 styles.dynamicMarginBottom,
                 expandedFlavors
@@ -627,35 +412,7 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
                     <Text style={styles.switchLabel}>Dividir mitades</Text>
                     <Switch
                       value={manualHalvesMode}
-                      onValueChange={(value) => {
-                        setManualHalvesMode(value);
-
-                        // Si se activa el modo mitades, convertir las personalizaciones de FULL a HALF_1
-                        if (value && selectedFlavors.length <= 1) {
-                          const updatedCustomizations =
-                            selectedPizzaCustomizations.map((sc) => {
-                              if (sc.half === PIZZA_HALF.FULL) {
-                                return { ...sc, half: PIZZA_HALF.HALF_1 };
-                              }
-                              return sc;
-                            });
-                          onCustomizationChange(updatedCustomizations);
-                        }
-                        // Si se desactiva el modo mitades y solo hay un sabor, convertir todo a FULL
-                        else if (!value && selectedFlavors.length === 1) {
-                          const updatedCustomizations =
-                            selectedPizzaCustomizations.map((sc) => {
-                              if (
-                                sc.half === PIZZA_HALF.HALF_1 ||
-                                sc.half === PIZZA_HALF.HALF_2
-                              ) {
-                                return { ...sc, half: PIZZA_HALF.FULL };
-                              }
-                              return sc;
-                            });
-                          onCustomizationChange(updatedCustomizations);
-                        }
-                      }}
+                      onValueChange={handleManualHalvesModeToggle}
                     />
                   </View>
                 )}

@@ -657,7 +657,7 @@ const OrderCartHeader: React.FC<{
   orderId,
   theme,
 }) => {
-  const styles = StyleSheet.create({
+  const styles = useMemo(() => StyleSheet.create({
     customHeader: {
       flexDirection: 'row',
       alignItems: 'center',
@@ -688,7 +688,7 @@ const OrderCartHeader: React.FC<{
       fontWeight: '600',
       fontSize: 11,
     },
-  });
+  }), [theme]);
 
   if (isEditMode) {
     return (
@@ -880,7 +880,7 @@ const OrderContent: React.FC<{
   showSnackbar,
   theme,
 }) => {
-  const styles = StyleSheet.create({
+  const styles = useMemo(() => StyleSheet.create({
     scrollView: {
       flex: 1,
       paddingHorizontal: theme.spacing.s,
@@ -951,7 +951,7 @@ const OrderContent: React.FC<{
       color: theme.colors.error,
       fontWeight: 'bold',
     },
-  });
+  }), [theme]);
 
   return (
     <ScrollView

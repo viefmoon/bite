@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Pressable } from 'react-native';
 import { Surface, Icon, Text } from 'react-native-paper';
 import { useAppTheme } from '../../../app/styles/theme';
@@ -94,7 +94,7 @@ export const OrderFilterHeader: React.FC<OrderFilterHeaderProps> = ({
   const theme = useAppTheme();
   const responsive = useResponsive();
 
-  const styles = {
+  const styles = useMemo(() => ({
     header: {
       paddingHorizontal: 0,
       paddingVertical: 0,
@@ -140,7 +140,7 @@ export const OrderFilterHeader: React.FC<OrderFilterHeaderProps> = ({
       fontSize: responsive.isTablet ? 10 : 12,
       fontWeight: '700' as const,
     },
-  };
+  }), [responsive]);
 
   const getFilterCount = (
     filterType: 'ALL' | 'WHATSAPP' | keyof typeof OrderTypeEnum,

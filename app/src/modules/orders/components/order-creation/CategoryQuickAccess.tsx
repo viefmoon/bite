@@ -14,6 +14,21 @@ export const CategoryQuickAccess = memo<CategoryQuickAccessProps>(
   ({ categories, selectedCategoryId, onCategorySelect }) => {
     const theme = useAppTheme();
 
+    const activeCategories = useMemo(
+      () => categories.filter((cat) => cat.isActive !== false),
+      [categories],
+    );
+
+    // Calcular el ancho de cada categoría según la cantidad
+    const getCategoryWidth = useMemo(() => {
+      const count = activeCategories.length;
+      if (count === 0) return '100%';
+      if (count === 1) return '100%';
+      if (count === 2) return '48%'; // 50% - gap
+      if (count === 3) return '31%'; // 33.33% - gap
+      return '23%'; // 25% - gap para 4 o más
+    }, [activeCategories.length]);
+
     const styles = useMemo(
       () =>
         StyleSheet.create({
@@ -30,8 +45,8 @@ export const CategoryQuickAccess = memo<CategoryQuickAccessProps>(
             gap: theme.spacing.xs,
           },
           categoryChip: {
-            flexBasis: '23%',
-            maxWidth: '23%',
+            flexBasis: getCategoryWidth,
+            maxWidth: getCategoryWidth,
           },
           categoryChipInner: {
             paddingHorizontal: theme.spacing.m,
@@ -66,12 +81,7 @@ export const CategoryQuickAccess = memo<CategoryQuickAccessProps>(
             color: theme.colors.onSurfaceDisabled,
           },
         }),
-      [theme],
-    );
-
-    const activeCategories = useMemo(
-      () => categories.filter((cat) => cat.isActive !== false),
-      [categories],
+      [theme, getCategoryWidth],
     );
 
     if (activeCategories.length === 0) {
