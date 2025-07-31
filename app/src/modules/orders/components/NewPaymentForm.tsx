@@ -23,7 +23,6 @@ interface NewPaymentFormProps {
   pendingAmount: number;
   mode?: 'payment' | 'prepayment';
   isLoading?: boolean;
-  onSubmit?: () => void; // Opcional ya que no se usa actualmente
 }
 
 // Métodos de pago deshabilitados temporalmente
@@ -37,7 +36,6 @@ export const NewPaymentForm: React.FC<NewPaymentFormProps> = ({
   pendingAmount,
   mode = 'payment',
   isLoading = false,
-  onSubmit: _onSubmit, // Renombrado para evitar warning de unused
 }) => {
   const theme = useAppTheme();
   const responsive = useResponsive();

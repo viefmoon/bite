@@ -114,10 +114,8 @@ const deepCompareCartItems = (
   originalItems: any[],
 ): boolean => {
   const normalizedCurrent = normalizeCartItems(currentItems);
-  const normalizedOriginal = normalizeCartItems(originalItems); // Los originales ya están normalizados al guardarlos
-
   return (
-    JSON.stringify(normalizedCurrent) === JSON.stringify(normalizedOriginal)
+    JSON.stringify(normalizedCurrent) === JSON.stringify(originalItems)
   );
 };
 
