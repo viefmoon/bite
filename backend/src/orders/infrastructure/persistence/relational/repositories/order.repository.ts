@@ -175,6 +175,13 @@ export class OrdersRelationalRepository implements OrderRepository {
         .addSelect(['pss.id', 'pss.status'])
         .leftJoin('pss.preparationScreen', 'ps')
         .addSelect(['ps.name'])
+        .leftJoin('order.payments', 'payments')
+        .addSelect([
+          'payments.id',
+          'payments.amount',
+          'payments.paymentMethod',
+          'payments.paymentStatus',
+        ])
         .skip((paginationOptions.page - 1) * paginationOptions.limit)
         .take(paginationOptions.limit)
         .where(where)

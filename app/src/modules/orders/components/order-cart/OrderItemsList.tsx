@@ -238,6 +238,9 @@ export const OrderItemsList: React.FC<OrderItemsListProps> = ({
           }
         }}
         enabled={!disabled}
+        shouldCancelWhenOutside={true}
+        containerStyle={styles.swipeableContainer}
+        childrenContainerStyle={styles.swipeableChildren}
       >
         {content}
       </Swipeable>
@@ -264,6 +267,12 @@ const createStyles = (theme: any) =>
       paddingVertical: theme.spacing.s,
       paddingHorizontal: theme.spacing.s,
       minHeight: 80,
+    },
+    swipeableContainer: {
+      overflow: 'visible',
+    },
+    swipeableChildren: {
+      overflow: 'visible',
     },
     modifiersText: {
       fontSize: 12,

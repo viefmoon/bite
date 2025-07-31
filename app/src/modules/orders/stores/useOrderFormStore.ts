@@ -3,6 +3,142 @@ import { OrderTypeEnum, type OrderType } from '../schema/orders.schema';
 import type { DeliveryInfo } from '../../../app/schemas/domain/delivery-info.schema';
 import type { OrderAdjustment } from '../schema/adjustments.schema';
 
+// Función para normalizar items actuales del carrito (CartItem[])
+const normalizeCartItems = (items: any[]) => {
+  return items
+    .map((item) => ({
+      productId: item.productId,
+      quantity: item.quantity,
+      variantId: item.variantId || null,
+      preparationNotes: item.preparationNotes || '',
+      modifiers: (item.modifiers || [])
+        .map((mod: any) => ({
+          id: mod.id,
+          name: mod.name,
+          price: mod.price || 0,
+        }))
+        .sort((a: any, b: any) => a.id.localeCompare(b.id)),
+      selectedPizzaCustomizations: (item.selectedPizzaCustomizations || [])
+        .map((cust: any) => ({
+          id: cust.id,
+          name: cust.name,
+          extraCost: cust.extraCost || 0,
+        }))
+        .sort((a: any, b: any) => a.id.localeCompare(b.id)),
+      pizzaExtraCost: item.pizzaExtraCost || 0,
+    }))
+    .sort((a, b) =>
+      `${a.productId}-${a.variantId}`.localeCompare(
+        `${b.productId}-${b.variantId}`,
+      ),
+    );
+};
+
+// Función para normalizar items originales de la base de datos (orderItems)
+const normalizeOriginalItems = (items: any[]) => {
+  // Agrupar items idénticos por configuración básica
+  const groupedItems: { [key: string]: any[] } = {};
+
+  items.forEach((item) => {
+    // Normalizar modificadores de manera consistente
+    const modifiers: any[] = [];
+
+    if (item.productModifiers && Array.isArray(item.productModifiers)) {
+      item.productModifiers.forEach((mod: any) => {
+        modifiers.push({
+          id: mod.id,
+          name: mod.name || 'Modificador',
+          price: mod.price || 0,
+        });
+      });
+    } else if (item.modifiers && Array.isArray(item.modifiers)) {
+      item.modifiers.forEach((mod: any) => {
+        modifiers.push({
+          id: mod.productModifierId || mod.id,
+          name: mod.productModifier?.name || mod.name || 'Modificador',
+          price: mod.price || 0,
+        });
+      });
+    }
+
+    // Normalizar personalizaciones de pizza
+    const pizzaCustomizations = (item.selectedPizzaCustomizations || [])
+      .map((cust: any) => ({
+        id: cust.id,
+        name: cust.name,
+        extraCost: cust.extraCost || 0,
+      }))
+      .sort((a: any, b: any) => a.id.localeCompare(b.id));
+
+    // Crear clave de agrupación más simple
+    const key = JSON.stringify({
+      productId: item.productId,
+      variantId: item.productVariantId || null,
+      preparationNotes: item.preparationNotes || '',
+      modifiers: modifiers.sort((a, b) => a.id.localeCompare(b.id)),
+      pizzaCustomizations,
+      pizzaExtraCost: item.pizzaExtraCost || 0,
+    });
+
+    if (!groupedItems[key]) {
+      groupedItems[key] = [];
+    }
+    groupedItems[key].push(item);
+  });
+
+  // Convertir grupos a formato normalizado
+  return Object.entries(groupedItems)
+    .map(([keyStr, groupItems]) => {
+      const keyObj = JSON.parse(keyStr);
+
+      return {
+        productId: keyObj.productId,
+        quantity: groupItems.length,
+        variantId: keyObj.variantId,
+        preparationNotes: keyObj.preparationNotes,
+        modifiers: keyObj.modifiers,
+        selectedPizzaCustomizations: keyObj.pizzaCustomizations,
+        pizzaExtraCost: keyObj.pizzaExtraCost,
+      };
+    })
+    .sort((a, b) =>
+      `${a.productId}-${a.variantId}`.localeCompare(
+        `${b.productId}-${b.variantId}`,
+      ),
+    );
+};
+
+// Función para comparación profunda de arrays de items del carrito
+const deepCompareCartItems = (
+  currentItems: any[],
+  originalItems: any[],
+): boolean => {
+  const normalizedCurrent = normalizeCartItems(currentItems);
+  const normalizedOriginal = normalizeCartItems(originalItems); // Los originales ya están normalizados al guardarlos
+
+  return JSON.stringify(normalizedCurrent) === JSON.stringify(normalizedOriginal);
+};
+
+// Función para comparación profunda de ajustes
+const deepCompareAdjustments = (
+  adj1: OrderAdjustment[],
+  adj2: OrderAdjustment[],
+): boolean => {
+  const normalize = (adjustments: OrderAdjustment[]) =>
+    adjustments
+      .filter((adj) => !adj.isDeleted)
+      .map((adj) => ({
+        id: adj.id || '',
+        name: adj.name,
+        isPercentage: adj.isPercentage,
+        value: adj.value || 0,
+        amount: adj.amount || 0,
+      }))
+      .sort((a, b) => a.id.localeCompare(b.id));
+
+  return JSON.stringify(normalize(adj1)) === JSON.stringify(normalize(adj2));
+};
+
 interface OrderFormState {
   id: string | null;
   isEditMode: boolean;
@@ -22,6 +158,7 @@ interface OrderFormState {
   orderDataLoaded: boolean;
   originalState: {
     orderType: OrderType;
+    selectedAreaId: string | null;
     tableId: string | null;
     isTemporaryTable: boolean;
     temporaryTableName: string;
@@ -29,6 +166,10 @@ interface OrderFormState {
     notes: string;
     scheduledAt: Date | null;
     adjustments: OrderAdjustment[];
+    items: any[];
+    prepaymentId: string | null;
+    prepaymentAmount: string;
+    prepaymentMethod: 'CASH' | 'CARD' | 'TRANSFER' | null;
   } | null;
   setOrderType: (type: OrderType) => void;
   setSelectedAreaId: (id: string | null) => void;
@@ -46,7 +187,7 @@ interface OrderFormState {
   setPrepaymentAmount: (amount: string) => void;
   setPrepaymentMethod: (method: 'CASH' | 'CARD' | 'TRANSFER' | null) => void;
   setEditMode: (isEdit: boolean, orderId?: string | null) => void;
-  checkForUnsavedChanges: () => void;
+  checkForUnsavedChanges: (currentItems?: any[]) => void;
   resetForm: () => void;
   setOriginalState: (state: any) => void;
 }
@@ -94,12 +235,10 @@ export const useOrderFormStore = create<OrderFormState>((set, get) => ({
 
       return newState;
     });
-    get().checkForUnsavedChanges();
   },
 
   setSelectedAreaId: (id: string | null) => {
     set({ selectedAreaId: id });
-    get().checkForUnsavedChanges();
   },
 
   setSelectedTableId: (id: string | null) => {
@@ -114,7 +253,6 @@ export const useOrderFormStore = create<OrderFormState>((set, get) => ({
 
       return newState;
     });
-    get().checkForUnsavedChanges();
   },
 
   setIsTemporaryTable: (isTemp: boolean) => {
@@ -133,32 +271,26 @@ export const useOrderFormStore = create<OrderFormState>((set, get) => ({
 
       return newState;
     });
-    get().checkForUnsavedChanges();
   },
 
   setTemporaryTableName: (name: string) => {
     set({ temporaryTableName: name });
-    get().checkForUnsavedChanges();
   },
 
   setScheduledTime: (time: Date | null) => {
     set({ scheduledTime: time });
-    get().checkForUnsavedChanges();
   },
 
   setDeliveryInfo: (info: DeliveryInfo) => {
     set({ deliveryInfo: info });
-    get().checkForUnsavedChanges();
   },
 
   setOrderNotes: (notes: string) => {
     set({ orderNotes: notes });
-    get().checkForUnsavedChanges();
   },
 
   setAdjustments: (adjustments: OrderAdjustment[]) => {
     set({ adjustments });
-    get().checkForUnsavedChanges();
   },
 
   addAdjustment: (adjustment: OrderAdjustment) => {
@@ -171,7 +303,6 @@ export const useOrderFormStore = create<OrderFormState>((set, get) => ({
       isNew: true,
     };
     set({ adjustments: [...adjustments, newAdjustment] });
-    get().checkForUnsavedChanges();
   },
 
   updateAdjustment: (
@@ -184,13 +315,11 @@ export const useOrderFormStore = create<OrderFormState>((set, get) => ({
         adj.id === id ? { ...adj, ...updatedAdjustment } : adj,
       ),
     });
-    get().checkForUnsavedChanges();
   },
 
   removeAdjustment: (id: string) => {
     const { adjustments } = get();
     set({ adjustments: adjustments.filter((adj) => adj.id !== id) });
-    get().checkForUnsavedChanges();
   },
 
   setPrepaymentId: (id: string | null) => {
@@ -209,15 +338,17 @@ export const useOrderFormStore = create<OrderFormState>((set, get) => ({
     set({ isEditMode: isEdit, id: orderId || null });
   },
 
-  checkForUnsavedChanges: () => {
+  checkForUnsavedChanges: (currentItems: any[] = []) => {
     const state = get();
     if (!state.isEditMode || !state.originalState) {
       set({ hasUnsavedChanges: false });
       return;
     }
 
-    const hasChanges =
+    // Comparación profunda de todos los campos
+    const hasFormChanges =
       state.orderType !== state.originalState.orderType ||
+      state.selectedAreaId !== state.originalState.selectedAreaId ||
       state.selectedTableId !== state.originalState.tableId ||
       state.isTemporaryTable !== state.originalState.isTemporaryTable ||
       state.temporaryTableName !== state.originalState.temporaryTableName ||
@@ -226,8 +357,23 @@ export const useOrderFormStore = create<OrderFormState>((set, get) => ({
       state.orderNotes !== state.originalState.notes ||
       (state.scheduledTime?.getTime() ?? null) !==
         (state.originalState.scheduledAt?.getTime() ?? null) ||
-      JSON.stringify(state.adjustments) !==
-        JSON.stringify(state.originalState.adjustments);
+      state.prepaymentId !== state.originalState.prepaymentId ||
+      state.prepaymentAmount !== state.originalState.prepaymentAmount ||
+      state.prepaymentMethod !== state.originalState.prepaymentMethod;
+
+    // Comparación profunda de ajustes
+    const hasAdjustmentChanges = !deepCompareAdjustments(
+      state.adjustments,
+      state.originalState.adjustments,
+    );
+
+    // Comparación profunda de items del carrito
+    const hasItemChanges = !deepCompareCartItems(
+      currentItems,
+      state.originalState.items,
+    );
+
+    const hasChanges = hasFormChanges || hasAdjustmentChanges || hasItemChanges;
 
     set({ hasUnsavedChanges: hasChanges });
   },
@@ -255,8 +401,15 @@ export const useOrderFormStore = create<OrderFormState>((set, get) => ({
   },
 
   setOriginalState: (orderData: any) => {
+    // Procesar los items originales para que tengan la misma estructura que los items actuales
+    const processedOriginalItems = orderData.orderItems
+      ? normalizeOriginalItems(orderData.orderItems)
+      : [];
+
     const originalState = {
       orderType: orderData.orderType,
+      selectedAreaId:
+        orderData.table?.areaId || orderData.table?.area?.id || null,
       tableId: orderData.tableId ?? null,
       isTemporaryTable: orderData.table?.isTemporary || false,
       temporaryTableName: orderData.table?.isTemporary
@@ -268,6 +421,10 @@ export const useOrderFormStore = create<OrderFormState>((set, get) => ({
         ? new Date(orderData.scheduledAt)
         : null,
       adjustments: orderData.adjustments || [],
+      items: processedOriginalItems,
+      prepaymentId: orderData.prepaymentId || null,
+      prepaymentAmount: orderData.prepaymentAmount?.toString() || '',
+      prepaymentMethod: orderData.prepaymentMethod || null,
     };
 
     set({

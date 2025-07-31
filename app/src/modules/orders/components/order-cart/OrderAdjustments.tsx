@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { View, StyleSheet } from 'react-native';
-import { Text, IconButton, List } from 'react-native-paper';
+import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { Text, IconButton } from 'react-native-paper';
 import { useAppTheme } from '@/app/styles/theme';
 import type { OrderAdjustment } from '../../schema/adjustments.schema';
 
@@ -39,59 +39,88 @@ export const OrderAdjustments: React.FC<OrderAdjustmentsProps> = ({
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>Ajustes y Descuentos</Text>
-        {canManageAdjustments && !disabled && (
+      {adjustments.length > 0 && (
+        <>
+          <View style={styles.header}>
+            <Text style={styles.headerText}>Ajustes y Descuentos</Text>
+          </View>
+          <View>
+            {adjustments.map((adjustment) => {
+              const amount = calculateAdjustmentAmount(adjustment);
+              return (
+                <View key={adjustment.id} style={styles.adjustmentItem}>
+                  <View style={styles.adjustmentContent}>
+                    <View style={styles.adjustmentInfo}>
+                      <Text style={styles.adjustmentName}>
+                        {adjustment.name}
+                      </Text>
+                      {adjustment.isPercentage && (
+                        <Text style={styles.percentageText}>
+                          {Math.abs(adjustment.value || 0)}% del subtotal
+                        </Text>
+                      )}
+                    </View>
+
+                    <View style={styles.adjustmentActions}>
+                      <View style={styles.priceContainer}>
+                        <Text
+                          style={[
+                            styles.adjustmentAmount,
+                            amount < 0
+                              ? styles.discountText
+                              : styles.chargeText,
+                          ]}
+                        >
+                          {amount < 0 ? '-' : '+'}${Math.abs(amount).toFixed(2)}
+                        </Text>
+                      </View>
+
+                      {canManageAdjustments && !disabled && (
+                        <View style={styles.actionButtons}>
+                          <IconButton
+                            icon="pencil"
+                            size={24}
+                            onPress={() => onEditAdjustment?.(adjustment)}
+                            style={styles.actionButton}
+                          />
+                          <IconButton
+                            icon="delete"
+                            size={24}
+                            onPress={() =>
+                              adjustment.id &&
+                              onRemoveAdjustment?.(adjustment.id)
+                            }
+                            style={styles.actionButton}
+                          />
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        </>
+      )}
+
+      {canManageAdjustments && !disabled && (
+        <TouchableOpacity
+          style={[
+            styles.addButtonContainer,
+            adjustments.length > 0 && styles.addButtonContainerWithMargin,
+          ]}
+          onPress={onAddAdjustment}
+          activeOpacity={0.7}
+        >
           <IconButton
-            icon="plus"
-            size={20}
+            icon="plus-circle-outline"
+            size={32}
             onPress={onAddAdjustment}
             style={styles.addButton}
+            iconColor={theme.colors.primary}
           />
-        )}
-      </View>
-
-      {adjustments.length === 0 ? (
-        <Text style={styles.emptyText}>No hay ajustes aplicados</Text>
-      ) : (
-        <View>
-          {adjustments.map((adjustment) => {
-            const amount = calculateAdjustmentAmount(adjustment);
-            return (
-              <List.Item
-                key={adjustment.id}
-                title={adjustment.name}
-                right={() => (
-                  <View style={styles.rightContent}>
-                    <Text style={styles.amountText}>-${amount.toFixed(2)}</Text>
-                    {adjustment.isPercentage && (
-                      <Text style={styles.percentageText}>
-                        ({adjustment.value}%)
-                      </Text>
-                    )}
-                    {canManageAdjustments && !disabled && (
-                      <View style={styles.actionButtons}>
-                        <IconButton
-                          icon="pencil"
-                          size={16}
-                          onPress={() => onEditAdjustment?.(adjustment)}
-                        />
-                        <IconButton
-                          icon="delete"
-                          size={16}
-                          onPress={() =>
-                            adjustment.id && onRemoveAdjustment?.(adjustment.id)
-                          }
-                        />
-                      </View>
-                    )}
-                  </View>
-                )}
-                style={styles.adjustmentItem}
-              />
-            );
-          })}
-        </View>
+          <Text style={styles.addButtonText}>Agregar Ajuste o Descuento</Text>
+        </TouchableOpacity>
       )}
     </View>
   );
@@ -100,12 +129,9 @@ export const OrderAdjustments: React.FC<OrderAdjustmentsProps> = ({
 const createStyles = (theme: any) =>
   StyleSheet.create({
     container: {
-      marginVertical: theme.spacing.m,
+      marginVertical: theme.spacing.s,
     },
     header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
       marginBottom: theme.spacing.s,
     },
     headerText: {
@@ -113,29 +139,46 @@ const createStyles = (theme: any) =>
       fontWeight: '600',
       color: theme.colors.onSurface,
     },
-    addButton: {
-      margin: -theme.spacing.s,
-    },
-    emptyText: {
-      fontSize: 14,
-      color: theme.colors.onSurfaceVariant,
-      fontStyle: 'italic',
-      paddingVertical: theme.spacing.m,
-      textAlign: 'center',
-    },
     adjustmentItem: {
       backgroundColor: theme.colors.surfaceVariant,
       marginBottom: theme.spacing.xs,
       borderRadius: theme.roundness,
+      paddingHorizontal: theme.spacing.m,
+      paddingVertical: theme.spacing.s,
     },
-    rightContent: {
+    adjustmentContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    adjustmentInfo: {
+      flex: 1,
+      marginRight: theme.spacing.s,
+    },
+    adjustmentName: {
+      fontSize: 16,
+      fontWeight: '500',
+      color: theme.colors.onSurface,
+      marginBottom: 2,
+    },
+    adjustmentActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: theme.spacing.xs,
+    },
+    priceContainer: {
       alignItems: 'flex-end',
-      justifyContent: 'center',
+      marginRight: theme.spacing.s,
     },
-    amountText: {
+    adjustmentAmount: {
       fontSize: 16,
       fontWeight: '600',
+    },
+    discountText: {
       color: theme.colors.primary,
+    },
+    chargeText: {
+      color: theme.colors.error,
     },
     percentageText: {
       fontSize: 12,
@@ -143,6 +186,37 @@ const createStyles = (theme: any) =>
     },
     actionButtons: {
       flexDirection: 'row',
-      marginTop: theme.spacing.xs,
+      alignItems: 'center',
+      gap: theme.spacing.s,
+    },
+    actionButton: {
+      margin: 0,
+      width: 40,
+      height: 40,
+    },
+    addButtonContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: theme.spacing.s,
+      paddingHorizontal: theme.spacing.s,
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: theme.roundness,
+      borderWidth: 1,
+      borderColor: theme.colors.outline,
+      borderStyle: 'dashed',
+      minHeight: 48,
+    },
+    addButtonContainerWithMargin: {
+      marginTop: theme.spacing.s,
+    },
+    addButton: {
+      margin: 0,
+      marginRight: theme.spacing.s,
+    },
+    addButtonText: {
+      fontSize: 14,
+      fontWeight: '500',
+      color: theme.colors.primary,
     },
   });

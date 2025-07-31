@@ -69,7 +69,7 @@ export const validateOrderForConfirmation = (
       if (adj.isDeleted) return sum;
       return sum + (adj.amount || 0);
     }, 0);
-    const total = subtotal - adjustmentTotal;
+    const total = subtotal + adjustmentTotal;
 
     if ((Number(prepaymentAmount) || 0) > total) {
       return {
@@ -104,23 +104,25 @@ export const validateOrderForConfirmation = (
       break;
 
     case OrderTypeEnum.DELIVERY:
-      if (!formState.deliveryInfo.recipientName?.trim()) {
-        return {
-          isValid: false,
-          errorMessage: 'Por favor ingresa el nombre del cliente',
-        };
-      }
-      if (!formState.deliveryInfo.recipientPhone?.trim()) {
-        return {
-          isValid: false,
-          errorMessage: 'Por favor ingresa el teléfono del cliente',
-        };
-      }
       if (!formState.deliveryInfo.fullAddress?.trim()) {
         return {
           isValid: false,
           errorMessage: 'Por favor ingresa la dirección de entrega',
         };
+      }
+      // Validar teléfono si se proporciona (opcional pero debe ser válido)
+      if (formState.deliveryInfo.recipientPhone?.trim()) {
+        const phoneDigits = formState.deliveryInfo.recipientPhone.replace(
+          /\D/g,
+          '',
+        );
+        if (phoneDigits.length < 10) {
+          return {
+            isValid: false,
+            errorMessage:
+              'El número de teléfono debe tener al menos 10 dígitos',
+          };
+        }
       }
       break;
 
@@ -130,6 +132,20 @@ export const validateOrderForConfirmation = (
           isValid: false,
           errorMessage: 'Por favor ingresa el nombre del cliente',
         };
+      }
+      // Validar teléfono si se proporciona (opcional pero debe ser válido)
+      if (formState.deliveryInfo.recipientPhone?.trim()) {
+        const phoneDigits = formState.deliveryInfo.recipientPhone.replace(
+          /\D/g,
+          '',
+        );
+        if (phoneDigits.length < 10) {
+          return {
+            isValid: false,
+            errorMessage:
+              'El número de teléfono debe tener al menos 10 dígitos',
+          };
+        }
       }
       break;
   }
@@ -162,20 +178,34 @@ export const getValidationErrors = (
       break;
 
     case OrderTypeEnum.DELIVERY:
-      if (!formState.deliveryInfo.recipientName?.trim()) {
-        errors.push('Ingresa el nombre del cliente');
-      }
-      if (!formState.deliveryInfo.recipientPhone?.trim()) {
-        errors.push('Ingresa el teléfono del cliente');
-      }
       if (!formState.deliveryInfo.fullAddress?.trim()) {
         errors.push('Ingresa la dirección de entrega');
+      }
+      // Validar teléfono si se proporciona (opcional pero debe ser válido)
+      if (formState.deliveryInfo.recipientPhone?.trim()) {
+        const phoneDigits = formState.deliveryInfo.recipientPhone.replace(
+          /\D/g,
+          '',
+        );
+        if (phoneDigits.length < 10) {
+          errors.push('El número de teléfono debe tener al menos 10 dígitos');
+        }
       }
       break;
 
     case OrderTypeEnum.TAKE_AWAY:
       if (!formState.deliveryInfo.recipientName?.trim()) {
         errors.push('Ingresa el nombre del cliente');
+      }
+      // Validar teléfono si se proporciona (opcional pero debe ser válido)
+      if (formState.deliveryInfo.recipientPhone?.trim()) {
+        const phoneDigits = formState.deliveryInfo.recipientPhone.replace(
+          /\D/g,
+          '',
+        );
+        if (phoneDigits.length < 10) {
+          errors.push('El número de teléfono debe tener al menos 10 dígitos');
+        }
       }
       break;
   }
@@ -311,7 +341,7 @@ export const prepareOrderForBackend = (
     if (adj.isDeleted) return sum;
     return sum + (adj.amount || 0);
   }, 0);
-  const total = Math.max(0, subtotal - adjustmentTotal);
+  const total = Math.max(0, subtotal + adjustmentTotal);
 
   let formattedPhone: string | undefined = undefined;
   if (
@@ -336,19 +366,20 @@ export const prepareOrderForBackend = (
       recipientPhone: formattedPhone,
     },
     notes: formState.orderNotes || undefined,
-    adjustments: isEditMode
-      ? formState.adjustments
-          .filter((adj) => !adj.isDeleted)
-          .map((adj) => {
-            return {
-              orderId: orderId || undefined,
-              name: adj.name,
-              isPercentage: adj.isPercentage,
-              value: adj.value,
-              amount: adj.amount,
-            };
-          })
-      : undefined,
+    adjustments:
+      formState.adjustments.length > 0
+        ? formState.adjustments
+            .filter((adj) => !adj.isDeleted)
+            .map((adj) => {
+              return {
+                orderId: isEditMode ? orderId || undefined : undefined,
+                name: adj.name,
+                isPercentage: adj.isPercentage,
+                value: adj.value,
+                amount: adj.amount,
+              };
+            })
+        : undefined,
   };
 
   if (!isEditMode && prepaymentId) {

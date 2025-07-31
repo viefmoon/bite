@@ -38,6 +38,7 @@ import { OrderChangeTrackerV2Service } from './services/order-change-tracker-v2.
 import { UserContextService } from '../common/services/user-context.service';
 import { DataSource } from 'typeorm';
 import { OrderEntity } from './infrastructure/persistence/relational/entities/order.entity';
+import { DeliveryInfoEntity } from './infrastructure/persistence/relational/entities/delivery-info.entity';
 import { OrderPreparationScreenStatusRepository } from './infrastructure/persistence/order-preparation-screen-status.repository';
 import {
   PreparationScreenStatus,
@@ -394,6 +395,8 @@ export class OrdersService {
         });
         newTableId = temporaryTable.id;
       }
+
+      // Actualizar datos básicos de la orden
 
       // Actualizar datos básicos de la orden
       const updatePayload: Partial<OrderEntity> = {};
@@ -770,7 +773,7 @@ export class OrdersService {
         );
       }
 
-      // Recargar la orden completa para el retorno (fuera de la transacción para mejor rendimiento)
+      // Recargar la orden completa para el retorno
       const updatedOrder = await this.findOne(id);
 
       // Imprimir automáticamente si hay cambios estructurales
@@ -782,7 +785,6 @@ export class OrdersService {
           true,
         );
       }
-
       return updatedOrder;
     }); // Fin de la transacción
   }
@@ -1543,7 +1545,6 @@ export class OrdersService {
       await manager.delete('delivery_info', { orderId });
       return;
     }
-
     // Para otros tipos de orden, procesar los datos de entrega
     const deliveryData = {
       ...(existingOrder as any).deliveryInfo,
@@ -1557,8 +1558,30 @@ export class OrdersService {
     );
 
     if (deliveryInfo) {
-      // Usar el repositorio que maneja correctamente las relaciones
-      await this.orderRepository.update(orderId, { deliveryInfo });
+      // Limpiar el objeto deliveryInfo removiendo propiedades internas de TypeORM
+      const cleanDeliveryInfo = Object.keys(deliveryInfo)
+        .filter(key => !key.startsWith('__'))
+        .reduce((obj, key) => {
+          obj[key] = deliveryInfo[key];
+          return obj;
+        }, {});
+      
+      // Buscar si ya existe un registro de delivery_info para esta orden
+      const existingDeliveryInfo = await manager.findOne(DeliveryInfoEntity, {
+        where: { orderId }
+      });
+
+      if (existingDeliveryInfo) {
+        // Actualizar registro existente
+        await manager.update(DeliveryInfoEntity, existingDeliveryInfo.id, cleanDeliveryInfo);
+      } else {
+        // Crear nuevo registro
+        const newDeliveryInfo = manager.create(DeliveryInfoEntity, {
+          ...cleanDeliveryInfo,
+          orderId
+        });
+        await manager.save(newDeliveryInfo);
+      }
     }
   }
 

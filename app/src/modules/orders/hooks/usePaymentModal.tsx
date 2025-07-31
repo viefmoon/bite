@@ -1,16 +1,16 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Keyboard } from 'react-native';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   PaymentMethodEnum,
   PaymentStatusEnum,
   type PaymentMethod,
 } from '../schema/payment.schema';
 import {
-  useGetPaymentsByOrderIdQuery,
   useCreatePaymentMutation,
   useDeletePaymentMutation,
 } from './usePaymentQueries';
-import { useCompleteOrderMutation } from './useOrdersQueries';
+import { useCompleteOrderMutation, useGetOrderByIdQuery } from './useOrdersQueries';
 import { prepaymentService } from '@/modules/payments/services/prepaymentService';
 
 interface UsePaymentModalProps {
@@ -19,6 +19,8 @@ interface UsePaymentModalProps {
   orderTotal: number;
   mode?: 'payment' | 'prepayment';
   existingPrepaymentId?: string;
+  existingPayments?: any[];
+  onPaymentRegistered?: () => void;
 }
 
 export const usePaymentModal = ({
@@ -27,7 +29,11 @@ export const usePaymentModal = ({
   orderTotal,
   mode = 'payment',
   existingPrepaymentId,
+  existingPayments = [],
+  onPaymentRegistered,
 }: UsePaymentModalProps) => {
+  const queryClient = useQueryClient();
+  
   // Estado del formulario
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>(
     PaymentMethodEnum.CASH,
@@ -42,11 +48,28 @@ export const usePaymentModal = ({
   const [showDeletePrepaymentConfirm, setShowDeletePrepaymentConfirm] =
     useState(false);
 
-  // Queries y mutations
-  const { data: payments = [], isLoading: isLoadingPayments } =
-    useGetPaymentsByOrderIdQuery(orderId || '', {
-      enabled: mode === 'payment' && !!orderId,
-    });
+  // Consultar payments actualizados directamente de la orden
+  const { data: orderData, isLoading: isLoadingPayments } = useGetOrderByIdQuery(orderId, {
+    enabled: !!orderId && visible && mode === 'payment',
+  });
+
+  // Usar payments actualizados o fallback
+  const payments = useMemo(() => {
+    if (mode === 'payment' && orderData?.payments && Array.isArray(orderData.payments)) {
+      return orderData.payments.map(payment => ({
+        id: payment.id,
+        amount: payment.amount,
+        paymentMethod: payment.paymentMethod,
+        paymentStatus: payment.paymentStatus,
+        createdAt: payment.createdAt,
+        updatedAt: payment.updatedAt,
+        orderId: payment.orderId,
+      }));
+    }
+    return Array.isArray(existingPayments) ? existingPayments : [];
+  }, [mode, orderData?.payments, existingPayments]);
+  
+  // Mutations
   const createPaymentMutation = useCreatePaymentMutation();
   const deletePaymentMutation = useDeletePaymentMutation();
   const completeOrderMutation = useCompleteOrderMutation();
@@ -56,7 +79,7 @@ export const usePaymentModal = ({
     if (mode === 'prepayment') {
       return 0;
     }
-    return (payments || [])
+    return payments
       .filter((p) => p.paymentStatus === PaymentStatusEnum.COMPLETED)
       .reduce((sum, payment) => sum + (payment.amount || 0), 0);
   }, [payments, mode]);
@@ -140,6 +163,15 @@ export const usePaymentModal = ({
           amount: amount,
         });
 
+        // Actualizar datos
+        queryClient.invalidateQueries({
+          queryKey: ['orders', 'detail', orderId],
+        });
+
+        if (onPaymentRegistered) {
+          onPaymentRegistered();
+        }
+
         // Resetear formulario
         setAmount(null);
         setShowChangeCalculator(false);
@@ -155,8 +187,20 @@ export const usePaymentModal = ({
     if (!paymentToDelete) return;
 
     await deletePaymentMutation.mutateAsync(paymentToDelete);
+    
+    // Actualizar datos
+    if (orderId) {
+      queryClient.invalidateQueries({
+        queryKey: ['orders', 'detail', orderId],
+      });
+    }
+    
     setShowDeleteConfirm(false);
     setPaymentToDelete(null);
+    
+    if (onPaymentRegistered) {
+      onPaymentRegistered();
+    }
   };
 
   const handleFinalizeOrder = async () => {
@@ -195,8 +239,17 @@ export const usePaymentModal = ({
     setShowDeleteConfirm(true);
   };
 
+  const closeDeleteConfirm = () => {
+    setShowDeleteConfirm(false);
+    setPaymentToDelete(null);
+  };
+
   const openFinalizeConfirm = () => {
     setShowFinalizeConfirm(true);
+  };
+
+  const closeFinalizeConfirm = () => {
+    setShowFinalizeConfirm(false);
   };
 
   const openDeletePrepaymentConfirm = () => {
@@ -237,7 +290,9 @@ export const usePaymentModal = ({
     handleDeletePrepayment,
     resetForm,
     openDeleteConfirm,
+    closeDeleteConfirm,
     openFinalizeConfirm,
+    closeFinalizeConfirm,
     openDeletePrepaymentConfirm,
   };
 };

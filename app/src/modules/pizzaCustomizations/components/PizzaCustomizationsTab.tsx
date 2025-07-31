@@ -4,14 +4,13 @@ import {
   Text,
   Searchbar,
   ActivityIndicator,
-  Menu,
-  IconButton,
-  Badge,
   Chip,
   Surface,
+  Badge,
 } from 'react-native-paper';
 import { FlashList } from '@shopify/flash-list';
 import { useAppTheme } from '@/app/styles/theme';
+import { ThemeDropdown, type DropdownOption } from '@/app/components/common/ThemeDropdown';
 import {
   usePizzaCustomizationsList,
   useDeletePizzaCustomization,
@@ -32,7 +31,13 @@ export function PizzaCustomizationsTab() {
   const [selectedType, setSelectedType] = useState<CustomizationType | 'all'>(
     'all',
   );
-  const [filterMenuVisible, setFilterMenuVisible] = useState(false);
+
+  // Opciones para el dropdown de tipo
+  const typeOptions: DropdownOption[] = [
+    { id: 'all', label: 'Todas', icon: 'filter-variant' },
+    { id: CustomizationTypeEnum.FLAVOR, label: 'Sabores', icon: 'pizza' },
+    { id: CustomizationTypeEnum.INGREDIENT, label: 'Ingredientes', icon: 'cheese' },
+  ];
   const [selectedCustomization, setSelectedCustomization] =
     useState<PizzaCustomization | null>(null);
   const [detailModalVisible, setDetailModalVisible] = useState(false);
@@ -193,21 +198,7 @@ export function PizzaCustomizationsTab() {
       backgroundColor: theme.colors.elevation.level2,
     },
     filterButtonContainer: {
-      position: 'relative',
-    },
-    filterIconButton: {
-      margin: 0,
-      backgroundColor: theme.colors.elevation.level2,
-    },
-    filterBadge: {
-      position: 'absolute',
-      top: 4,
-      right: 4,
-      backgroundColor: theme.colors.primary,
-    },
-    menuContent: {
-      backgroundColor: theme.colors.elevation.level3,
-      marginTop: theme.spacing.xs,
+      minWidth: 140,
     },
     content: {
       flex: 1,
@@ -300,10 +291,6 @@ export function PizzaCustomizationsTab() {
       justifyContent: 'center',
       alignItems: 'center',
     },
-    activeMenuTitle: {
-      color: theme.colors.primary,
-      fontWeight: '600',
-    },
   });
 
   if (isLoading) {
@@ -329,82 +316,13 @@ export function PizzaCustomizationsTab() {
             iconColor={theme.colors.onSurfaceVariant}
           />
           <View style={styles.filterButtonContainer}>
-            <Menu
-              visible={filterMenuVisible}
-              onDismiss={() => setFilterMenuVisible(false)}
-              anchor={
-                <IconButton
-                  icon={
-                    selectedType === 'all'
-                      ? 'filter-variant'
-                      : selectedType === CustomizationTypeEnum.FLAVOR
-                        ? 'pizza'
-                        : 'cheese'
-                  }
-                  mode="contained-tonal"
-                  size={24}
-                  onPress={() => setFilterMenuVisible(true)}
-                  style={styles.filterIconButton}
-                  iconColor={
-                    selectedType !== 'all'
-                      ? theme.colors.primary
-                      : theme.colors.onSurfaceVariant
-                  }
-                />
-              }
-              anchorPosition="bottom"
-              contentStyle={styles.menuContent}
-            >
-              <Menu.Item
-                onPress={() => {
-                  setSelectedType('all');
-                  setFilterMenuVisible(false);
-                }}
-                title="Todas"
-                leadingIcon="filter-variant"
-                trailingIcon={selectedType === 'all' ? 'check' : undefined}
-                titleStyle={
-                  selectedType === 'all' ? styles.activeMenuTitle : undefined
-                }
-              />
-              <Menu.Item
-                onPress={() => {
-                  setSelectedType(CustomizationTypeEnum.FLAVOR);
-                  setFilterMenuVisible(false);
-                }}
-                title="Sabores"
-                leadingIcon="pizza"
-                trailingIcon={
-                  selectedType === CustomizationTypeEnum.FLAVOR
-                    ? 'check'
-                    : undefined
-                }
-                titleStyle={
-                  selectedType === CustomizationTypeEnum.FLAVOR
-                    ? styles.activeMenuTitle
-                    : undefined
-                }
-              />
-              <Menu.Item
-                onPress={() => {
-                  setSelectedType(CustomizationTypeEnum.INGREDIENT);
-                  setFilterMenuVisible(false);
-                }}
-                title="Ingredientes"
-                leadingIcon="cheese"
-                trailingIcon={
-                  selectedType === CustomizationTypeEnum.INGREDIENT
-                    ? 'check'
-                    : undefined
-                }
-                titleStyle={
-                  selectedType === CustomizationTypeEnum.INGREDIENT
-                    ? styles.activeMenuTitle
-                    : undefined
-                }
-              />
-            </Menu>
-            {hasActiveFilter && <Badge style={styles.filterBadge} size={8} />}
+            <ThemeDropdown
+              label="Tipo"
+              value={selectedType}
+              options={typeOptions}
+              onSelect={(option) => setSelectedType(option.id as CustomizationType | 'all')}
+              placeholder="Selecciona tipo"
+            />
           </View>
         </View>
       </View>

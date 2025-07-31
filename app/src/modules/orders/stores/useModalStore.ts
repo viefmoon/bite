@@ -138,7 +138,9 @@ export const modalHelpers = {
     orderTotal: number;
     orderNumber?: number;
     orderStatus?: string;
+    existingPayments?: any[];
     onOrderCompleted?: () => void;
+    onPaymentRegistered?: () => void;
     onClose?: () => void;
   }) => {
     useModalStore.getState().showModal('payment', props);

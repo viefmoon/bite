@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { areCartItemsEqual } from '../utils/cartUtils';
 import {
   useCartStore,
@@ -19,6 +20,36 @@ export const useOrderManagement = () => {
   const cartStore = useCartStore();
   const formStore = useOrderFormStore();
   const uiStore = useOrderUIStore();
+
+  // Auto-check for unsaved changes when cart items change
+  useEffect(() => {
+    if (formStore.isEditMode && formStore.originalState) {
+      formStore.checkForUnsavedChanges(cartStore.items);
+    }
+  }, [cartStore.items, formStore.isEditMode, formStore.originalState]);
+
+  // Auto-check for unsaved changes when form fields change
+  useEffect(() => {
+    if (formStore.isEditMode && formStore.originalState) {
+      formStore.checkForUnsavedChanges(cartStore.items);
+    }
+  }, [
+    formStore.orderType,
+    formStore.selectedAreaId,
+    formStore.selectedTableId,
+    formStore.isTemporaryTable,
+    formStore.temporaryTableName,
+    formStore.scheduledTime,
+    formStore.deliveryInfo,
+    formStore.orderNotes,
+    formStore.adjustments,
+    formStore.prepaymentId,
+    formStore.prepaymentAmount,
+    formStore.prepaymentMethod,
+    formStore.isEditMode,
+    formStore.originalState,
+    cartStore.items,
+  ]);
 
   const loadOrderForEditing = (orderData: any) => {
     // Reset states first
@@ -294,6 +325,7 @@ export const useOrderManagement = () => {
         // Update original state after successful edit
         const newOriginalState = {
           orderType: formStore.orderType,
+          selectedAreaId: formStore.selectedAreaId,
           tableId: formStore.selectedTableId,
           isTemporaryTable: formStore.isTemporaryTable,
           temporaryTableName: formStore.temporaryTableName,
@@ -301,6 +333,10 @@ export const useOrderManagement = () => {
           notes: formStore.orderNotes,
           scheduledAt: formStore.scheduledTime,
           adjustments: [...formStore.adjustments],
+          orderItems: [...cartStore.items],
+          prepaymentId: formStore.prepaymentId,
+          prepaymentAmount: formStore.prepaymentAmount,
+          prepaymentMethod: formStore.prepaymentMethod,
         };
         formStore.setOriginalState({ ...newOriginalState });
       } else {
@@ -318,7 +354,7 @@ export const useOrderManagement = () => {
   };
 
   const checkForUnsavedChanges = () => {
-    formStore.checkForUnsavedChanges();
+    formStore.checkForUnsavedChanges(cartStore.items);
   };
 
   return {
@@ -342,20 +378,16 @@ export const useOrderManagement = () => {
         pizzaExtraCost,
         formStore.isEditMode,
       );
-      checkForUnsavedChanges();
     },
     removeItem: (itemId: string) => {
       cartStore.removeItem(itemId);
-      checkForUnsavedChanges();
     },
     updateItemQuantity: (itemId: string, quantity: number) => {
       cartStore.updateItemQuantity(itemId, quantity);
-      checkForUnsavedChanges();
     },
     updateItem: cartStore.updateItem,
     setItems: (items: CartItem[]) => {
       cartStore.setItems(items);
-      checkForUnsavedChanges();
     },
 
     // Form actions
@@ -479,7 +511,7 @@ export const useOrderTotal = () => {
     return sum;
   }, 0);
 
-  return Math.max(0, subtotal - adjustmentTotal);
+  return Math.max(0, subtotal + adjustmentTotal);
 };
 
 export const useOrderItemsCount = useCartItemsCount;

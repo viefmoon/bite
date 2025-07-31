@@ -259,7 +259,7 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
 
   const getPaymentStatus = () => {
     if (order?.payments && order.payments.length > 0) {
-      const totalPaid = order.payments.reduce((sum, p) => sum + p.amount, 0);
+      const totalPaid = order.payments?.reduce((sum, p) => sum + p.amount, 0) || 0;
       const totalAmount = order.total || 0;
 
       if (totalPaid >= totalAmount) {
@@ -640,10 +640,10 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
                     .toFixed(2)}
                 </Text>
                 {(() => {
-                  const totalPaid = order.payments!.reduce(
+                  const totalPaid = order.payments?.reduce(
                     (sum, p) => sum + p.amount,
                     0,
-                  );
+                  ) || 0;
                   const remaining = (order.total || 0) - totalPaid;
                   if (remaining > 0) {
                     return (
@@ -663,7 +663,7 @@ export const OrderDetailsView: React.FC<OrderDetailsViewProps> = ({
               </View>
             </View>
 
-            {order.payments.map((payment, index) => {
+            {order.payments?.map((payment, index) => {
               const getPaymentMethodLabel = (method: string) => {
                 switch (method) {
                   case 'CASH':

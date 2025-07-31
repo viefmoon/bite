@@ -278,7 +278,11 @@ const OrderSummaryCard: React.FC<OrderSummaryCardProps> = ({
                                   : screen.status === 'IN_PROGRESS'
                                     ? '⏳'
                                     : ''}
-                                🍳 {screen.preparationScreen?.name || screen.preparationScreenName || screen.name || 'Pantalla'}
+                                🍳{' '}
+                                {screen.preparationScreen?.name ||
+                                  screen.preparationScreenName ||
+                                  screen.name ||
+                                  'Pantalla'}
                               </Text>
                             </View>
                           );

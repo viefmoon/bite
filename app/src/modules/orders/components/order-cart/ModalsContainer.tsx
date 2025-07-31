@@ -165,6 +165,7 @@ export const ModalsContainer: React.FC<Record<string, never>> = () => {
         );
 
       case 'payment':
+        console.log('ModalsContainer - payment modal props:', modalProps);
         return (
           <PaymentModal
             visible={true}
@@ -173,9 +174,13 @@ export const ModalsContainer: React.FC<Record<string, never>> = () => {
             orderTotal={modalProps.orderTotal}
             orderNumber={modalProps.orderNumber}
             orderStatus={modalProps.orderStatus}
+            existingPayments={modalProps.existingPayments}
             onOrderCompleted={() => {
               modalHelpers.hideModal();
               modalProps.onOrderCompleted?.();
+            }}
+            onPaymentRegistered={() => {
+              modalProps.onPaymentRegistered?.();
             }}
           />
         );

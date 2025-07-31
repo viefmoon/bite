@@ -37,7 +37,7 @@ export const PrepaymentSection: React.FC<PrepaymentSectionProps> = ({
   // En modo edición, mostrar los montos pagados
   if (isEditMode) {
     return (
-      <>
+      <View style={styles.paymentBreakdownSection}>
         <View style={styles.totalsContainer}>
           <Text style={styles.totalsText}>Pagado:</Text>
           <Text style={[styles.totalsValue, styles.paidAmount]}>
@@ -58,7 +58,7 @@ export const PrepaymentSection: React.FC<PrepaymentSectionProps> = ({
             ${(pendingAmount || 0).toFixed(2)}
           </Text>
         </View>
-      </>
+      </View>
     );
   }
 
@@ -144,6 +144,10 @@ export const PrepaymentSection: React.FC<PrepaymentSectionProps> = ({
 
 const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
   StyleSheet.create({
+    paymentBreakdownSection: {
+      paddingHorizontal: theme.spacing.m,
+      paddingVertical: theme.spacing.s,
+    },
     prepaymentSection: {
       marginBottom: theme.spacing.s,
       paddingHorizontal: theme.spacing.xs,
@@ -184,8 +188,10 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     totalsContainer: {
       flexDirection: 'row',
       justifyContent: 'space-between',
+      alignItems: 'center',
       marginBottom: theme.spacing.xs,
       paddingHorizontal: theme.spacing.xs,
+      minHeight: 24,
     },
     totalsText: {
       fontSize: 16,
@@ -194,6 +200,7 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     totalsValue: {
       fontSize: 16,
       color: theme.colors.onSurface,
+      textAlign: 'right',
     },
     paidAmount: {
       color: '#4CAF50',

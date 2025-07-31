@@ -11,7 +11,6 @@ import {
   Card,
   Checkbox,
   TouchableRipple,
-  Menu,
 } from 'react-native-paper';
 import {
   useForm,
@@ -38,6 +37,7 @@ import CustomImagePicker, {
   FileObject,
 } from '@/app/components/common/CustomImagePicker';
 import { ImageUploadService } from '@/app/lib/imageUploadService';
+import { ThemeDropdown, type DropdownOption } from '@/app/components/common/ThemeDropdown';
 import { useModifierGroupsQuery } from '../../modifiers/hooks/useModifierGroupsQuery';
 import { modifierService } from '../../modifiers/services/modifierService';
 import { useGetPreparationScreens } from '../../preparationScreens/hooks/usePreparationScreensQueries';
@@ -91,8 +91,6 @@ const useProductFormLogic = ({
     {},
   );
   const [priceInputValue, setPriceInputValue] = useState<string>('');
-  const [preparationScreenMenuVisible, setPreparationScreenMenuVisible] =
-    useState(false);
 
   // Valores por defecto del formulario
   const defaultValues = useMemo(
@@ -145,16 +143,26 @@ const useProductFormLogic = ({
   // Queries para datos asíncronos
   const { data: modifierGroups, isLoading: isLoadingGroups } =
     useModifierGroupsQuery({ isActive: true });
-
+    
   const { data: preparationScreensResponse } = useGetPreparationScreens(
     {},
     { page: 1, limit: 50 },
   );
-
   const preparationScreens = preparationScreensResponse?.data || [];
+
+
   const allModifierGroups = useMemo(
     () => modifierGroups || [],
     [modifierGroups],
+  );
+
+  // Opciones para el dropdown de pantallas de preparación
+  const preparationScreenOptions: DropdownOption[] = useMemo(
+    () => preparationScreens.map((screen) => ({
+      id: screen.id,
+      label: screen.name,
+    })),
+    [preparationScreens]
   );
 
   // Watchers del formulario
@@ -379,13 +387,12 @@ const useProductFormLogic = ({
     isInternalImageUploading,
     priceInputValue,
     setPriceInputValue,
-    preparationScreenMenuVisible,
-    setPreparationScreenMenuVisible,
 
     // Datos
     allModifierGroups,
     groupModifiers,
     preparationScreens,
+    preparationScreenOptions,
     isLoadingGroups,
 
     // Watchers
@@ -420,6 +427,8 @@ function ProductFormModal({
     [theme, responsive],
   );
 
+  // Opciones para el dropdown de pantallas de preparación - usando datos del hook
+
   // Uso del custom hook para toda la lógica
   const {
     control,
@@ -435,11 +444,10 @@ function ProductFormModal({
     isInternalImageUploading,
     priceInputValue,
     setPriceInputValue,
-    preparationScreenMenuVisible,
-    setPreparationScreenMenuVisible,
     allModifierGroups,
     groupModifiers,
     preparationScreens,
+    preparationScreenOptions,
     isLoadingGroups,
     hasVariants,
     currentImageUri,
@@ -725,61 +733,18 @@ function ProductFormModal({
             control={control}
             name="preparationScreenId"
             render={({ field: { onChange, value } }) => (
-              <View>
-                <Menu
-                  visible={preparationScreenMenuVisible}
-                  onDismiss={() => setPreparationScreenMenuVisible(false)}
-                  anchor={
-                    <TextInput
-                      label="Pantalla de Preparación"
-                      value={
-                        preparationScreens.find((screen) => screen.id === value)
-                          ?.name || ''
-                      }
-                      onPress={() => setPreparationScreenMenuVisible(true)}
-                      right={
-                        value ? (
-                          <TextInput.Icon
-                            icon="close"
-                            onPress={() => {
-                              onChange(null);
-                            }}
-                          />
-                        ) : (
-                          <TextInput.Icon
-                            icon="chevron-down"
-                            onPress={() =>
-                              setPreparationScreenMenuVisible(true)
-                            }
-                          />
-                        )
-                      }
-                      editable={false}
-                      error={!!errors.preparationScreenId}
-                      style={styles.input}
-                      disabled={isSubmitting}
-                    />
-                  }
-                >
-                  {preparationScreens.map((screen) => (
-                    <Menu.Item
-                      key={screen.id}
-                      onPress={() => {
-                        onChange(screen.id);
-                        setPreparationScreenMenuVisible(false);
-                      }}
-                      title={screen.name}
-                    />
-                  ))}
-                </Menu>
-              </View>
+              <ThemeDropdown
+                label="Pantalla de Preparación"
+                value={value}
+                options={preparationScreenOptions}
+                onSelect={(option) => onChange(option.id)}
+                disabled={isSubmitting}
+                error={!!errors.preparationScreenId}
+                helperText={errors.preparationScreenId?.message}
+                placeholder="Selecciona una pantalla"
+              />
             )}
           />
-          {errors.preparationScreenId && (
-            <HelperText type="error" visible={!!errors.preparationScreenId}>
-              {errors.preparationScreenId.message}
-            </HelperText>
-          )}
 
           <Controller
             control={control}

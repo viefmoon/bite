@@ -27,7 +27,9 @@ interface PaymentModalProps {
   orderTotal: number;
   orderNumber?: number;
   orderStatus?: string; // Estado de la orden
+  existingPayments?: any[]; // Payments existentes desde la orden
   onOrderCompleted?: () => void; // Callback cuando se completa la orden
+  onPaymentRegistered?: () => void; // Callback cuando se registra un pago
   mode?: 'payment' | 'prepayment'; // Modo del modal
   onPrepaymentCreated?: (
     prepaymentId: string,
@@ -45,7 +47,9 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   orderTotal,
   orderNumber,
   orderStatus,
+  existingPayments,
   onOrderCompleted,
+  onPaymentRegistered,
   mode = 'payment',
   onPrepaymentCreated,
   existingPrepaymentId,
@@ -92,9 +96,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     handleDeletePayment,
     handleFinalizeOrder,
     handleDeletePrepayment,
-    // resetForm - no se usa actualmente
     openDeleteConfirm,
+    closeDeleteConfirm,
     openFinalizeConfirm,
+    closeFinalizeConfirm,
     openDeletePrepaymentConfirm,
   } = usePaymentModal({
     visible,
@@ -102,14 +107,15 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     orderTotal,
     mode,
     existingPrepaymentId,
+    existingPayments,
+    onPaymentRegistered,
   });
 
-  // Manejar el teclado para scroll automático
+  // Auto-scroll al mostrar teclado
   React.useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
       'keyboardDidShow',
       () => {
-        // Pequeño delay para asegurar que el layout esté actualizado
         setTimeout(() => {
           if (amountInputRef.current && scrollViewRef.current) {
             amountInputRef.current.measureLayout(
@@ -145,7 +151,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         onDismiss();
       }
     } catch (error) {
-      // Error ya manejado en el hook
+      // Error manejado por el hook
     }
   };
 
@@ -153,18 +159,17 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     try {
       const success = await handleFinalizeOrder();
       if (success) {
-        // Llamar al callback si existe
         if (onOrderCompleted) {
           onOrderCompleted();
         } else {
-          // Si no hay callback, solo cerrar el modal
           onDismiss();
         }
       }
     } catch (error) {
-      // Error ya manejado en el hook
+      // Error manejado por el hook
     }
   };
+
 
   const handlePrepaymentDeleted = async () => {
     try {
@@ -174,7 +179,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         onDismiss();
       }
     } catch (error) {
-      // Error ya manejado en el hook
+      // Error manejado por el hook
     }
   };
 
@@ -318,12 +323,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       {/* Modal de confirmación para eliminar */}
       <ConfirmationModal
         visible={showDeleteConfirm}
-        onDismiss={() => {
-          // Las funciones del hook ya manejan el estado
-        }}
-        onCancel={() => {
-          // Las funciones del hook ya manejan el estado
-        }}
+        onDismiss={closeDeleteConfirm}
+        onCancel={closeDeleteConfirm}
         onConfirm={handleDeletePayment}
         title="Eliminar pago"
         message="¿Está seguro de que desea eliminar este pago? Esta acción no se puede deshacer."
@@ -348,8 +349,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       {/* Modal de confirmación para finalizar orden */}
       <ConfirmationModal
         visible={showFinalizeConfirm}
-        onDismiss={() => {}}
-        onCancel={() => {}}
+        onDismiss={closeFinalizeConfirm}
+        onCancel={closeFinalizeConfirm}
         onConfirm={handleOrderFinalized}
         title="Finalizar orden"
         message={

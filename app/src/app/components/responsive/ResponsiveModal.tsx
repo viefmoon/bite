@@ -164,7 +164,7 @@ export const ResponsiveModal: React.FC<ResponsiveModalProps> = ({
   // Padding del contenido responsivo
   const contentPadding = useMemo(() => {
     if (responsive.isSmallMobile) {
-      return responsive.spacing(theme.spacing.xs); 
+      return responsive.spacing(theme.spacing.xs);
     } else if (responsive.isTablet) {
       return responsive.spacing(theme.spacing.s);
     } else {

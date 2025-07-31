@@ -72,7 +72,7 @@ export const ExistingPaymentsList: React.FC<ExistingPaymentsListProps> = ({
     return <ActivityIndicator style={styles.loader} />;
   }
 
-  if (payments.length === 0) {
+  if (!payments || payments.length === 0) {
     return null;
   }
 
@@ -142,64 +142,64 @@ const createStyles = (
     },
     sectionTitle: {
       ...theme.fonts.titleSmall,
-      fontSize: responsive.fontSize(theme.fonts.titleSmall.fontSize),
       color: theme.colors.onSurface,
-      marginBottom: responsive.spacingPreset.xs,
+      marginBottom: responsive.spacingPreset.s,
       fontWeight: '600',
     },
     paymentItem: {
-      backgroundColor: theme.colors.surfaceVariant,
-      borderRadius: theme.roundness,
-      padding: responsive.spacingPreset.xs,
-      marginBottom: responsive.spacingPreset.xs,
       flexDirection: 'row',
       justifyContent: 'space-between',
       alignItems: 'center',
+      paddingVertical: responsive.spacingPreset.s,
+      paddingHorizontal: responsive.spacingPreset.s,
+      marginBottom: responsive.spacingPreset.xs,
+      backgroundColor: theme.colors.surfaceVariant,
+      borderRadius: theme.roundness,
+      minHeight: 60,
     },
     paymentLeftInfo: {
       flex: 1,
-    },
-    paymentRightInfo: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: responsive.spacingPreset.xs,
+      justifyContent: 'center',
     },
     paymentMethodRow: {
       flexDirection: 'row',
       alignItems: 'center',
+      marginBottom: 2,
     },
     paymentMethodCompact: {
       ...theme.fonts.bodyMedium,
-      fontSize: responsive.fontSize(theme.fonts.bodyMedium.fontSize),
-      fontWeight: '500',
       color: theme.colors.onSurface,
-    },
-    paymentAmountCompact: {
-      ...theme.fonts.bodyMedium,
-      fontSize: responsive.fontSize(theme.fonts.bodyMedium.fontSize),
-      fontWeight: 'bold',
-      color: theme.colors.primary,
-      minWidth: responsive.isTablet ? 60 : 70,
-      textAlign: 'right',
+      fontWeight: '600',
     },
     paymentDateCompact: {
       ...theme.fonts.bodySmall,
-      fontSize: responsive.fontSize(theme.fonts.bodySmall.fontSize),
       color: theme.colors.onSurfaceVariant,
-      marginTop: 2,
+      fontSize: 12,
+    },
+    paymentRightInfo: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: responsive.spacingPreset.s,
+    },
+    paymentAmountCompact: {
+      ...theme.fonts.bodyMedium,
+      color: theme.colors.onSurface,
+      fontWeight: 'bold',
+      minWidth: 70,
+      textAlign: 'right',
     },
     statusChipCompact: {
-      height: responsive.isTablet ? 24 : 26,
+      height: 28,
+      minWidth: 80,
     },
     statusChipTextCompact: {
-      fontSize: responsive.fontSize(11),
-      fontWeight: '600',
       color: 'white',
-      lineHeight: responsive.isTablet ? 12 : 14,
+      fontSize: 11,
+      fontWeight: '600',
     },
     deleteIconButton: {
       margin: 0,
-      width: responsive.isTablet ? 32 : 36,
-      height: responsive.isTablet ? 32 : 36,
+      width: 32,
+      height: 32,
     },
   });

@@ -5,6 +5,7 @@ import React, {
   useState,
   useRef,
 } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Portal,
   Text,
@@ -13,18 +14,8 @@ import {
   Menu,
   IconButton,
   Modal,
-  FAB,
 } from 'react-native-paper';
-import {
-  View,
-  ScrollView,
-  StyleSheet,
-  ActivityIndicator,
-  TouchableWithoutFeedback,
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { View, ScrollView, StyleSheet, ActivityIndicator } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useAppTheme } from '@/app/styles/theme';
 import { NAVIGATION_PATHS } from '@/app/constants/navigationPaths';
@@ -44,7 +35,7 @@ import { OrderDetailsForBackend } from '../utils/orderUtils';
 import { useAuthStore } from '@/app/stores/authStore';
 import { useSnackbarStore } from '@/app/stores/snackbarStore';
 import { useGetOrderByIdQuery } from '../hooks/useOrdersQueries';
-import { useGetPaymentsByOrderIdQuery } from '../hooks/usePaymentQueries';
+import { useProductQuery } from '../../menu/hooks/useProductsQueries';
 import type { SelectedPizzaCustomization } from '../../pizzaCustomizations/schema/pizzaCustomization.schema';
 import {
   OrderTypeSelector,
@@ -60,6 +51,7 @@ import {
   ModalsContainer,
 } from './order-cart';
 import { modalHelpers } from '../stores/useModalStore';
+import { useOrderFormStore } from '../stores/useOrderFormStore';
 
 interface OrderCartDetailProps {
   visible: boolean;
@@ -84,7 +76,6 @@ interface UseOrderCartProps {
   onClose?: () => void;
 }
 
-// Custom hook useOrderCart DENTRO del archivo
 const useOrderCart = ({
   isEditMode = false,
   orderId,
@@ -94,19 +85,19 @@ const useOrderCart = ({
   onClose,
 }: UseOrderCartProps) => {
   const theme = useAppTheme();
+  const queryClient = useQueryClient();
   const showSnackbar = useSnackbarStore((state) => state.showSnackbar);
   const user = useAuthStore((state) => state.user);
 
-  // Referencias a los formularios
   const dineInFormRef = useRef<DineInFormRef | null>(null);
   const takeAwayFormRef = useRef<TakeAwayFormRef | null>(null);
   const deliveryFormRef = useRef<DeliveryFormRef | null>(null);
 
-  // Estados locales
   const [showOptionsMenu, setShowOptionsMenu] = useState(false);
   const [hasLoadedOrder, setHasLoadedOrder] = useState(false);
-
-  // Conexión con el store de Zustand
+  const [editingItemProductId, setEditingItemProductId] = useState<
+    string | null
+  >(null);
   const {
     items,
     orderType,
@@ -134,51 +125,70 @@ const useOrderCart = ({
     loadOrderForEditing,
   } = useOrderManagement();
 
-  // Cálculos
   const subtotal = useOrderSubtotal();
   const total = useOrderTotal();
   const totalItemsCount = useOrderItemsCount();
-
-  // Queries
   const {
     data: orderData,
     isLoading: isLoadingOrder,
     isError: isErrorOrder,
+    refetch: refetchOrder,
   } = useGetOrderByIdQuery(orderId, {
     enabled: isEditMode && !!orderId && visible,
   });
 
-  const { data: payments = [] } = useGetPaymentsByOrderIdQuery(orderId || '', {
-    enabled: isEditMode && !!orderId && visible,
-  });
 
-  // Cálculos derivados
-  const totalAdjustments = useMemo(() => {
-    return adjustments.reduce((sum, adj) => sum + (adj.amount || 0), 0);
+  const { data: editingProduct, isLoading: isLoadingEditingProduct } =
+    useProductQuery(editingItemProductId || '', {
+      enabled: !!editingItemProductId,
+    });
+
+  const adjustmentTotals = useMemo(() => {
+    const discounts = adjustments.reduce((sum, adj) => {
+      const amount = adj.amount || 0;
+      return amount < 0 ? sum + Math.abs(amount) : sum;
+    }, 0);
+
+    const charges = adjustments.reduce((sum, adj) => {
+      const amount = adj.amount || 0;
+      return amount > 0 ? sum + amount : sum;
+    }, 0);
+
+    return { discounts, charges, total: charges - discounts };
   }, [adjustments]);
 
-  const totalPaid = useMemo(() => {
-    if (!isEditMode || !payments) return 0;
-    return payments.reduce((sum, payment) => sum + payment.amount, 0);
-  }, [payments, isEditMode]);
 
-  const pendingAmount = useMemo(() => {
-    return total - totalPaid;
-  }, [total, totalPaid]);
+  // Cálculos simples para mostrar totales en la UI
+  const totalPaid = isEditMode && orderData?.payments 
+    ? orderData.payments.reduce((sum, payment) => sum + (payment.amount || 0), 0)
+    : 0;
+  const pendingAmount = total - totalPaid;
 
   const canRegisterPayments = useMemo(() => {
     return checkCanRegisterPayments(user);
   }, [user]);
-
-  // Validación centralizada
   const validateOrder = useCallback(() => {
     let isValid = true;
+    const errors: string[] = [];
 
     switch (orderType) {
       case OrderTypeEnum.DINE_IN:
         if (dineInFormRef.current) {
           const dineInValid = dineInFormRef.current.validate();
           isValid = isValid && dineInValid;
+
+          if (!dineInValid) {
+            const store = useOrderFormStore.getState();
+            if (!store.selectedAreaId) {
+              errors.push('Selecciona un área');
+            }
+            if (!store.isTemporaryTable && !store.selectedTableId) {
+              errors.push('Selecciona una mesa');
+            }
+            if (store.isTemporaryTable && !store.temporaryTableName?.trim()) {
+              errors.push('Ingresa el nombre de la mesa temporal');
+            }
+          }
         }
         break;
 
@@ -186,6 +196,22 @@ const useOrderCart = ({
         if (takeAwayFormRef.current) {
           const takeAwayValid = takeAwayFormRef.current.validate();
           isValid = isValid && takeAwayValid;
+
+          if (!takeAwayValid) {
+            const store = useOrderFormStore.getState();
+            if (!store.deliveryInfo.recipientName?.trim()) {
+              errors.push('Ingresa el nombre del cliente');
+            }
+            if (store.deliveryInfo.recipientPhone?.trim()) {
+              const phoneDigits = store.deliveryInfo.recipientPhone.replace(
+                /\D/g,
+                '',
+              );
+              if (phoneDigits.length < 10) {
+                errors.push('El teléfono debe tener al menos 10 dígitos');
+              }
+            }
+          }
         }
         break;
 
@@ -193,14 +219,35 @@ const useOrderCart = ({
         if (deliveryFormRef.current) {
           const deliveryValid = deliveryFormRef.current.validate();
           isValid = isValid && deliveryValid;
+
+          if (!deliveryValid) {
+            const store = useOrderFormStore.getState();
+            if (!store.deliveryInfo.fullAddress?.trim()) {
+              errors.push('Ingresa la dirección de entrega');
+            }
+            if (store.deliveryInfo.recipientPhone?.trim()) {
+              const phoneDigits = store.deliveryInfo.recipientPhone.replace(
+                /\D/g,
+                '',
+              );
+              if (phoneDigits.length < 10) {
+                errors.push('El teléfono debe tener al menos 10 dígitos');
+              }
+            }
+          }
         }
         break;
     }
 
-    return isValid;
-  }, [orderType]);
+    if (!isValid && errors.length > 0) {
+      showSnackbar({
+        message: `Por favor completa: ${errors[0]}`,
+        type: 'error',
+      });
+    }
 
-  // Handlers
+    return isValid;
+  }, [orderType, showSnackbar]);
   const handleTimeConfirm = useCallback(
     (date: Date) => {
       const now = new Date();
@@ -267,19 +314,18 @@ const useOrderCart = ({
   );
 
   const handleEditCartItem = useCallback(
-    (item: CartItem) => {
+    async (item: CartItem) => {
       if (onEditItem) {
         onEditItem(item);
       } else {
-        modalHelpers.showProductCustomization({
-          editingProduct: null,
-          editingItemFromList: item,
-          clearEditingState: () => {},
-          handleUpdateEditedItem,
+        await queryClient.invalidateQueries({
+          queryKey: ['products', 'detail', item.productId],
         });
+
+        setEditingItemProductId(item.productId);
       }
     },
-    [onEditItem, handleUpdateEditedItem],
+    [onEditItem, queryClient],
   );
 
   const handlePrepaymentDeleted = useCallback(() => {
@@ -377,29 +423,23 @@ const useOrderCart = ({
 
   const handleAddAdjustment = useCallback(
     (adjustment: OrderAdjustment) => {
-      if (isEditMode) {
-        addAdjustment(adjustment);
-      }
+      addAdjustment(adjustment);
     },
-    [isEditMode, addAdjustment],
+    [addAdjustment],
   );
 
   const handleUpdateAdjustment = useCallback(
     (id: string, updatedAdjustment: OrderAdjustment) => {
-      if (isEditMode) {
-        updateAdjustment(id, updatedAdjustment);
-      }
+      updateAdjustment(id, updatedAdjustment);
     },
-    [isEditMode, updateAdjustment],
+    [updateAdjustment],
   );
 
   const handleRemoveAdjustment = useCallback(
     (id: string) => {
-      if (isEditMode) {
-        removeAdjustment(id);
-      }
+      removeAdjustment(id);
     },
-    [isEditMode, removeAdjustment],
+    [removeAdjustment],
   );
 
   const handleConfirmOrder = useCallback(async () => {
@@ -442,26 +482,50 @@ const useOrderCart = ({
     onClose,
   ]);
 
-  // Effects
-
-  // Cargar la orden cuando se reciba la data
   useEffect(() => {
     if (isEditMode && orderData && visible && !hasLoadedOrder) {
       loadOrderForEditing(orderData);
       setHasLoadedOrder(true);
     }
   }, [isEditMode, orderData, visible, hasLoadedOrder, loadOrderForEditing]);
-
-  // Reset hasLoadedOrder cuando se cierra el modal
   useEffect(() => {
     if (!visible) {
       setHasLoadedOrder(false);
+      setEditingItemProductId(null);
     }
   }, [visible]);
+  useEffect(() => {
+    if (editingProduct && editingItemProductId && !isLoadingEditingProduct) {
+      const itemToEdit = items.find(
+        (item) => item.productId === editingItemProductId,
+      );
 
-  // API expuesta
+      if (itemToEdit) {
+        modalHelpers.showProductCustomization({
+          editingProduct: editingProduct,
+          editingItemFromList: itemToEdit,
+          clearEditingState: () => {
+            setEditingItemProductId(null);
+            queryClient.removeQueries({
+              queryKey: ['products', 'detail', editingItemProductId],
+            });
+          },
+          handleUpdateEditedItem,
+        });
+      }
+
+      setEditingItemProductId(null);
+    }
+  }, [
+    editingProduct,
+    editingItemProductId,
+    isLoadingEditingProduct,
+    items,
+    handleUpdateEditedItem,
+    queryClient,
+  ]);
+
   return {
-    // Estados y datos
     items,
     orderType,
     scheduledTime,
@@ -477,31 +541,23 @@ const useOrderCart = ({
     orderData,
     isLoadingOrder,
     isErrorOrder,
-    payments,
     canRegisterPayments,
-
-    // Cálculos
+    isLoadingEditingProduct,
     subtotal,
     total,
     totalItemsCount,
-    totalAdjustments,
+    adjustmentTotals,
     totalPaid,
     pendingAmount,
-
-    // Referencias
     dineInFormRef,
     takeAwayFormRef,
     deliveryFormRef,
-
-    // Setters
     setOrderType,
     setScheduledTime,
     setPrepaymentId,
     setPrepaymentAmount,
     setPrepaymentMethod,
     setShowOptionsMenu,
-
-    // Handlers
     showTimePicker,
     handleTimeConfirm,
     handleEditCartItem,
@@ -516,8 +572,6 @@ const useOrderCart = ({
     handleAddAdjustment,
     handleUpdateAdjustment,
     handleRemoveAdjustment,
-
-    // Store actions
     removeCartItem,
     updateCartItemQuantity,
     updateCartItem,
@@ -527,13 +581,9 @@ const useOrderCart = ({
     removeAdjustment,
     confirmOrder,
     loadOrderForEditing,
-
-    // Theme
     theme,
   };
 };
-
-// Sub-componente para el formulario según el tipo de orden
 const OrderFormSection: React.FC<{
   orderType: OrderType;
   dineInFormRef: React.RefObject<DineInFormRef | null>;
@@ -573,8 +623,6 @@ const OrderFormSection: React.FC<{
       return null;
   }
 };
-
-// Sub-componente para el header de la orden
 const OrderCartHeader: React.FC<{
   isEditMode: boolean;
   orderData: any;
@@ -751,8 +799,6 @@ const OrderCartHeader: React.FC<{
     />
   );
 };
-
-// Sub-componente para el contenido principal del scroll
 const OrderContent: React.FC<{
   orderType: OrderType;
   setOrderType: (type: OrderType) => void;
@@ -772,7 +818,7 @@ const OrderContent: React.FC<{
   addItem: any;
   adjustments: any[];
   subtotal: number;
-  totalAdjustments: number;
+  adjustmentTotals: { discounts: number; charges: number; total: number };
   total: number;
   totalPaid: number;
   pendingAmount: number;
@@ -783,7 +829,11 @@ const OrderContent: React.FC<{
   handleAddAdjustment: (adjustment: OrderAdjustment) => void;
   handleUpdateAdjustment: (id: string, adjustment: OrderAdjustment) => void;
   handleRemoveAdjustment: (id: string) => void;
-  handlePrepaymentCreated: (id: string, amount: number, method: 'CASH' | 'CARD' | 'TRANSFER') => void;
+  handlePrepaymentCreated: (
+    id: string,
+    amount: number,
+    method: 'CASH' | 'CARD' | 'TRANSFER',
+  ) => void;
   handlePrepaymentDeleted: () => void;
   handleDeletePrepayment: () => void;
   showSnackbar: any;
@@ -807,7 +857,7 @@ const OrderContent: React.FC<{
   addItem,
   adjustments,
   subtotal,
-  totalAdjustments,
+  adjustmentTotals,
   total,
   totalPaid,
   pendingAmount,
@@ -836,6 +886,65 @@ const OrderContent: React.FC<{
       marginTop: theme.spacing.m,
       marginBottom: theme.spacing.m,
     },
+    subtotalSection: {
+      paddingHorizontal: theme.spacing.m,
+      paddingVertical: theme.spacing.s,
+    },
+    subtotalRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: theme.spacing.xs,
+      paddingHorizontal: theme.spacing.xs,
+      minHeight: 24,
+    },
+    subtotalLabel: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: theme.colors.onSurfaceVariant,
+      flex: 1,
+      textAlign: 'left',
+    },
+    subtotalAmount: {
+      fontSize: 16,
+      fontWeight: 'bold',
+      color: theme.colors.onSurface,
+      textAlign: 'right',
+      minWidth: 80,
+    },
+    discountAmount: {
+      color: theme.colors.primary,
+    },
+    chargeAmount: {
+      color: theme.colors.error,
+    },
+    dividerLine: {
+      height: 1,
+      backgroundColor: theme.colors.outlineVariant,
+      marginVertical: theme.spacing.s,
+      marginHorizontal: theme.spacing.xs,
+    },
+    totalLabel: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: theme.colors.onSurface,
+      flex: 1,
+      textAlign: 'left',
+    },
+    totalAmount: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: theme.colors.primary,
+      textAlign: 'right',
+      minWidth: 80,
+    },
+    paidAmount: {
+      color: '#10B981',
+    },
+    pendingAmount: {
+      color: theme.colors.error,
+      fontWeight: 'bold',
+    },
   });
 
   return (
@@ -843,6 +952,9 @@ const OrderContent: React.FC<{
       style={styles.scrollView}
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="on-drag"
+      nestedScrollEnabled={true}
+      scrollEventThrottle={16}
+      bounces={true}
     >
       <OrderTypeSelector
         value={orderType}
@@ -924,55 +1036,64 @@ const OrderContent: React.FC<{
 
       <Divider style={styles.divider} />
 
-      {isEditMode && (
-        <OrderAdjustments
-          adjustments={adjustments}
-          subtotal={subtotal}
-          onAddAdjustment={() =>
-            modalHelpers.showAdjustment({
-              adjustmentToEdit: null,
-              setAdjustmentToEdit: () => {},
-              handleAddAdjustment,
-              handleUpdateAdjustment,
-              subtotal,
-            })
-          }
-          onEditAdjustment={(adjustment) => {
-            modalHelpers.showAdjustment({
-              adjustmentToEdit: adjustment,
-              setAdjustmentToEdit: () => {},
-              handleAddAdjustment,
-              handleUpdateAdjustment,
-              subtotal,
-            });
-          }}
-          onRemoveAdjustment={handleRemoveAdjustment}
-          disabled={false}
-          canManageAdjustments={true}
-        />
-      )}
+      <OrderAdjustments
+        adjustments={adjustments}
+        subtotal={subtotal}
+        onAddAdjustment={() =>
+          modalHelpers.showAdjustment({
+            adjustmentToEdit: null,
+            setAdjustmentToEdit: () => {},
+            handleAddAdjustment,
+            handleUpdateAdjustment,
+            subtotal,
+          })
+        }
+        onEditAdjustment={(adjustment) => {
+          modalHelpers.showAdjustment({
+            adjustmentToEdit: adjustment,
+            setAdjustmentToEdit: () => {},
+            handleAddAdjustment,
+            handleUpdateAdjustment,
+            subtotal,
+          });
+        }}
+        onRemoveAdjustment={handleRemoveAdjustment}
+        disabled={false}
+        canManageAdjustments={true}
+      />
 
       <Divider style={styles.divider} />
 
-      {/* Subtotal dentro del scroll */}
       <View style={styles.subtotalSection}>
-        <View style={styles.subtotalContainer}>
-          <Text style={styles.subtotalText}>Subtotal:</Text>
-          <Text style={styles.subtotalValue}>${subtotal.toFixed(2)}</Text>
+        <View style={styles.subtotalRow}>
+          <Text style={styles.subtotalLabel}>Subtotal:</Text>
+          <Text style={styles.subtotalAmount}>${subtotal.toFixed(2)}</Text>
         </View>
-        {totalAdjustments > 0 && (
-          <View style={styles.subtotalContainer}>
-            <Text style={styles.subtotalText}>Descuentos:</Text>
-            <Text style={[styles.subtotalValue, styles.discountText]}>
-              -${totalAdjustments.toFixed(2)}
+        {adjustmentTotals.discounts > 0 && (
+          <View style={styles.subtotalRow}>
+            <Text style={styles.subtotalLabel}>Descuentos:</Text>
+            <Text style={[styles.subtotalAmount, styles.discountAmount]}>
+              -${adjustmentTotals.discounts.toFixed(2)}
             </Text>
           </View>
         )}
+        {adjustmentTotals.charges > 0 && (
+          <View style={styles.subtotalRow}>
+            <Text style={styles.subtotalLabel}>Cargos:</Text>
+            <Text style={[styles.subtotalAmount, styles.chargeAmount]}>
+              +${adjustmentTotals.charges.toFixed(2)}
+            </Text>
+          </View>
+        )}
+        <View style={styles.dividerLine} />
+        <View style={styles.subtotalRow}>
+          <Text style={styles.totalLabel}>Total:</Text>
+          <Text style={styles.totalAmount}>${total.toFixed(2)}</Text>
+        </View>
       </View>
 
       <Divider style={styles.divider} />
 
-      {/* Prepayment Section dentro del scroll */}
       <PrepaymentSection
         isEditMode={isEditMode}
         prepaymentId={prepaymentId}
@@ -995,72 +1116,6 @@ const OrderContent: React.FC<{
     </ScrollView>
   );
 };
-
-// Sub-componente para el resumen de totales
-const OrderSummarySection: React.FC<{
-  subtotal: number;
-  totalAdjustments: number;
-  total: number;
-  theme: any;
-}> = ({ subtotal, totalAdjustments, total, theme }) => {
-  const styles = StyleSheet.create({
-    totalsSection: {
-      paddingHorizontal: theme.spacing.m,
-      paddingVertical: theme.spacing.s,
-    },
-    totalsContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginBottom: theme.spacing.xs,
-      paddingHorizontal: theme.spacing.xs,
-    },
-    totalsText: {
-      fontSize: 16,
-    },
-    totalsValue: {
-      fontSize: 16,
-      fontWeight: 'bold',
-    },
-    totalLabel: {
-      fontWeight: 'bold',
-      fontSize: 18,
-    },
-    totalValue: {
-      fontSize: 18,
-      color: theme.colors.primary,
-    },
-    discountText: {
-      color: theme.colors.primary,
-    },
-    totalDivider: {
-      marginVertical: theme.spacing.s,
-    },
-  });
-
-  return (
-    <View style={styles.totalsSection}>
-      <View style={styles.totalsContainer}>
-        <Text style={styles.totalsText}>Subtotal:</Text>
-        <Text style={styles.totalsValue}>${subtotal.toFixed(2)}</Text>
-      </View>
-      {totalAdjustments > 0 && (
-        <View style={styles.totalsContainer}>
-          <Text style={styles.totalsText}>Descuentos:</Text>
-          <Text style={[styles.totalsValue, styles.discountText]}>
-            -${totalAdjustments.toFixed(2)}
-          </Text>
-        </View>
-      )}
-      <Divider style={styles.totalDivider} />
-      <View style={styles.totalsContainer}>
-        <Text style={styles.totalLabel}>Total:</Text>
-        <Text style={styles.totalValue}>${total.toFixed(2)}</Text>
-      </View>
-    </View>
-  );
-};
-
-// Componente principal refactorizado
 const OrderCartDetail: React.FC<OrderCartDetailProps> = (props) => {
   const {
     visible,
@@ -1075,7 +1130,6 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = (props) => {
   } = props;
 
   const {
-    // Estados y datos
     items,
     orderType,
     adjustments,
@@ -1086,29 +1140,22 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = (props) => {
     canRegisterPayments,
     hasUnsavedChanges,
     isConfirming,
+    isLoadingEditingProduct,
     prepaymentId,
     paymentAmount,
     paymentMethod,
     isCartVisible,
-
-    // Cálculos
     subtotal,
     total,
     totalItemsCount,
-    totalAdjustments,
+    adjustmentTotals,
     totalPaid,
     pendingAmount,
-
-    // Referencias
     dineInFormRef,
     takeAwayFormRef,
     deliveryFormRef,
-
-    // Setters
     setOrderType,
     setShowOptionsMenu,
-
-    // Handlers
     showTimePicker,
     handleEditCartItem,
     handleConfirmOrder,
@@ -1120,11 +1167,7 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = (props) => {
     handleAddAdjustment,
     handleUpdateAdjustment,
     handleRemoveAdjustment,
-
-    // Store actions
     addItem,
-
-    // Theme
     theme,
   } = useOrderCart(props);
 
@@ -1223,134 +1266,145 @@ const OrderCartDetail: React.FC<OrderCartDetailProps> = (props) => {
         dismissableBackButton={false}
       >
         <GestureHandlerRootView style={styles.container}>
-          <TouchableWithoutFeedback
-            onPress={Keyboard.dismiss}
-            accessible={false}
-          >
-            <View style={styles.container}>
-              <OrderCartHeader
-                isEditMode={isEditMode}
-                orderData={orderData}
-                orderNumber={orderNumber}
-                orderDate={orderDate}
-                showOptionsMenu={showOptionsMenu}
-                setShowOptionsMenu={setShowOptionsMenu}
-                hasUnsavedChanges={hasUnsavedChanges}
-                totalItemsCount={totalItemsCount}
-                isCartVisible={isCartVisible}
-                onClose={onClose}
-                onCancelOrder={onCancelOrder}
-                orderId={orderId}
-                theme={theme}
-              />
+          <View style={styles.container}>
+            {isLoadingEditingProduct && (
+              <View style={styles.loadingOverlay}>
+                <ActivityIndicator size="small" color={theme.colors.primary} />
+                <Text style={styles.loadingEditText}>Cargando producto...</Text>
+              </View>
+            )}
 
-              <OrderContent
-                orderType={orderType}
-                setOrderType={setOrderType}
-                dineInFormRef={dineInFormRef}
-                takeAwayFormRef={takeAwayFormRef}
-                deliveryFormRef={deliveryFormRef}
-                onScheduleTimePress={showTimePicker}
-                items={items}
-                isEditMode={isEditMode}
-                onEditCartItem={handleEditCartItem}
-                removeItem={removeItem}
-                updateItemQuantity={updateItemQuantity}
-                onAddProducts={onAddProducts}
-                navigation={navigation}
-                orderId={orderId}
-                orderNumber={orderNumber}
-                addItem={addItem}
-                adjustments={adjustments}
-                subtotal={subtotal}
-                totalAdjustments={totalAdjustments}
-                total={total}
-                totalPaid={totalPaid}
-                pendingAmount={pendingAmount}
-                canRegisterPayments={canRegisterPayments}
-                prepaymentId={prepaymentId}
-                paymentAmount={paymentAmount}
-                paymentMethod={paymentMethod}
-                handleAddAdjustment={handleAddAdjustment}
-                handleUpdateAdjustment={handleUpdateAdjustment}
-                handleRemoveAdjustment={handleRemoveAdjustment}
-                handlePrepaymentCreated={handlePrepaymentCreated}
-                handlePrepaymentDeleted={handlePrepaymentDeleted}
-                handleDeletePrepayment={handleDeletePrepayment}
-                showSnackbar={showSnackbar}
-                theme={theme}
-              />
+            <OrderCartHeader
+              isEditMode={isEditMode}
+              orderData={orderData}
+              orderNumber={orderNumber}
+              orderDate={orderDate}
+              showOptionsMenu={showOptionsMenu}
+              setShowOptionsMenu={setShowOptionsMenu}
+              hasUnsavedChanges={hasUnsavedChanges}
+              totalItemsCount={totalItemsCount}
+              isCartVisible={isCartVisible}
+              onClose={onClose}
+              onCancelOrder={onCancelOrder}
+              orderId={orderId}
+              theme={theme}
+            />
 
+            <OrderContent
+              orderType={orderType}
+              setOrderType={setOrderType}
+              dineInFormRef={dineInFormRef}
+              takeAwayFormRef={takeAwayFormRef}
+              deliveryFormRef={deliveryFormRef}
+              onScheduleTimePress={showTimePicker}
+              items={items}
+              isEditMode={isEditMode}
+              onEditCartItem={handleEditCartItem}
+              removeItem={removeItem}
+              updateItemQuantity={updateItemQuantity}
+              onAddProducts={onAddProducts}
+              navigation={navigation}
+              orderId={orderId}
+              orderNumber={orderNumber}
+              addItem={addItem}
+              adjustments={adjustments}
+              subtotal={subtotal}
+              adjustmentTotals={adjustmentTotals}
+              total={total}
+              totalPaid={totalPaid}
+              pendingAmount={pendingAmount}
+              canRegisterPayments={canRegisterPayments}
+              prepaymentId={prepaymentId}
+              paymentAmount={paymentAmount}
+              paymentMethod={paymentMethod}
+              handleAddAdjustment={handleAddAdjustment}
+              handleUpdateAdjustment={handleUpdateAdjustment}
+              handleRemoveAdjustment={handleRemoveAdjustment}
+              handlePrepaymentCreated={handlePrepaymentCreated}
+              handlePrepaymentDeleted={handlePrepaymentDeleted}
+              handleDeletePrepayment={handleDeletePrepayment}
+              showSnackbar={showSnackbar}
+              theme={theme}
+            />
 
+            <ModalsContainer />
+          </View>
+
+          <View style={styles.footer}>
+            <View style={styles.buttonRow}>
+              <Button
+                mode="contained"
+                onPress={handleConfirmOrder}
+                disabled={
+                  isConfirming ||
+                  items.length === 0 ||
+                  (isEditMode && !hasUnsavedChanges)
+                }
+                style={[
+                  styles.confirmButton,
+                  styles.confirmButtonWithPayment,
+                  isEditMode && hasUnsavedChanges && styles.cancelButton,
+                ]}
+                loading={isConfirming}
+                contentStyle={styles.confirmButtonContent}
+              >
+                <Text style={styles.buttonText}>
+                  {isConfirming
+                    ? isEditMode
+                      ? 'Guardando...'
+                      : 'Enviando...'
+                    : `${
+                        isEditMode
+                          ? hasUnsavedChanges
+                            ? '⚠️ Guardar Cambios'
+                            : 'Guardar Cambios'
+                          : 'Enviar Orden'
+                      }${!isConfirming ? ` - $${total.toFixed(2)}` : ''}`}
+                </Text>
+              </Button>
+              
               {isEditMode && orderId && visible && (
-                <FAB
+                <IconButton
                   icon="cash-multiple"
-                  style={[
-                    styles.paymentFab,
-                    hasUnsavedChanges
-                      ? styles.paymentFabUnsaved
-                      : pendingAmount <= 0
-                        ? styles.paymentFabCompleted
-                        : { backgroundColor: theme.colors.primary },
-                  ]}
-                  color="white"
+                  size={32}
                   onPress={() => {
                     if (hasUnsavedChanges) {
                       showSnackbar({
-                        message:
-                          'Debes guardar los cambios antes de registrar pagos',
+                        message: 'Debes guardar los cambios antes de registrar pagos',
                         type: 'warning',
                       });
-                    } else {
-                      modalHelpers.showPayment({
-                        orderId,
-                        orderTotal: total,
-                        orderNumber,
-                        orderStatus: orderData?.orderStatus,
-                        onOrderCompleted: () => {
-                          onClose?.();
-                        },
-                      });
+                      return;
                     }
+
+                    modalHelpers.showPayment({
+                      orderId,
+                      orderTotal: total,
+                      orderNumber,
+                      orderStatus: orderData?.orderStatus,
+                      existingPayments: [], // El modal consulta los datos directamente
+                      onOrderCompleted: () => {
+                        onClose?.();
+                      },
+                      onPaymentRegistered: () => {
+                        queryClient.invalidateQueries({
+                          queryKey: ['orders', 'detail', orderId],
+                        });
+                        refetchOrder();
+                      },
+                    });
                   }}
-                  visible={true}
+                  style={[
+                    styles.paymentIconButton,
+                    hasUnsavedChanges
+                      ? styles.paymentIconButtonUnsaved
+                      : pendingAmount <= 0
+                        ? styles.paymentIconButtonCompleted
+                        : { backgroundColor: theme.colors.primary },
+                  ]}
+                  iconColor="white"
                 />
               )}
-
-              <ModalsContainer />
             </View>
-          </TouchableWithoutFeedback>
-
-          {/* Footer con solo el total y el botón */}
-          <View style={styles.footer}>
-            <View style={styles.totalContainer}>
-              <Text style={styles.totalLabel}>Total:</Text>
-              <Text style={styles.totalValue}>${total.toFixed(2)}</Text>
-            </View>
-            <Button
-              mode="contained"
-              onPress={handleConfirmOrder}
-              disabled={
-                isConfirming ||
-                items.length === 0 ||
-                (isEditMode && !hasUnsavedChanges)
-              }
-              style={[
-                styles.confirmButton,
-                isEditMode && hasUnsavedChanges && styles.cancelButton,
-              ]}
-              loading={isConfirming}
-            >
-              {isConfirming
-                ? isEditMode
-                  ? 'Guardando...'
-                  : 'Enviando...'
-                : isEditMode
-                  ? hasUnsavedChanges
-                    ? '⚠️ Guardar Cambios'
-                    : 'Guardar Cambios'
-                  : 'Enviar Orden'}
-            </Button>
           </View>
         </GestureHandlerRootView>
       </Modal>
@@ -1450,62 +1504,55 @@ const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     cancelButton: {
       backgroundColor: '#FF6B35',
     },
-    paymentFab: {
-      position: 'absolute',
-      margin: theme.spacing.m,
-      right: 0,
-      bottom: 140,
-      zIndex: 1000,
-      elevation: 6,
+    buttonRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: theme.spacing.s,
+    },
+    confirmButtonWithPayment: {
+      flex: 1,
+      marginRight: theme.spacing.s,
+    },
+    paymentIconButton: {
       width: 56,
       height: 56,
-      justifyContent: 'center',
-      alignItems: 'center',
+      borderRadius: 28,
+      margin: 0,
     },
-    paymentFabUnsaved: {
+    paymentIconButtonUnsaved: {
       backgroundColor: '#9CA3AF',
     },
-    paymentFabCompleted: {
+    paymentIconButtonCompleted: {
       backgroundColor: '#4CAF50',
     },
-    subtotalSection: {
-      paddingHorizontal: theme.spacing.m,
-      paddingVertical: theme.spacing.s,
+    confirmButtonContent: {
+      paddingVertical: 4,
+      paddingHorizontal: theme.spacing.s,
     },
-    subtotalContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      marginBottom: theme.spacing.xs,
-      paddingHorizontal: theme.spacing.xs,
-    },
-    subtotalText: {
+    buttonText: {
+      color: 'white',
       fontSize: 16,
-      color: theme.colors.onSurface,
+      fontWeight: '600',
+      textAlign: 'center',
     },
-    subtotalValue: {
-      fontSize: 16,
-      fontWeight: 'bold',
-      color: theme.colors.onSurface,
-    },
-    discountText: {
-      color: theme.colors.primary,
-    },
-    totalContainer: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
+    loadingOverlay: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.3)',
+      justifyContent: 'center',
       alignItems: 'center',
-      marginBottom: theme.spacing.s,
-      paddingHorizontal: theme.spacing.xs,
+      zIndex: 1000,
+      flexDirection: 'row',
+      gap: theme.spacing.s,
     },
-    totalLabel: {
-      fontWeight: 'bold',
-      fontSize: 18,
-      color: theme.colors.onSurface,
-    },
-    totalValue: {
-      fontSize: 18,
-      fontWeight: 'bold',
+    loadingEditText: {
       color: theme.colors.primary,
+      fontSize: 14,
+      fontWeight: '500',
     },
   });
 
