@@ -21,28 +21,32 @@ const OrderHeader = ({
 }: OrderHeaderProps) => {
   const theme = useAppTheme();
 
-  const styles = useMemo(() => StyleSheet.create({
-    header: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: 4,
-      paddingVertical: 8,
-      backgroundColor: theme.colors.elevation.level2,
-      elevation: 0,
-      shadowOpacity: 0,
-    },
-    headerTitle: {
-      ...theme.fonts.titleMedium,
-      color: theme.colors.onSurface,
-      fontWeight: 'bold',
-      textAlign: 'center',
-      flex: 1,
-    },
-    headerSpacer: {
-      width: 48,
-    },
-  }), [theme]);
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        header: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          paddingHorizontal: 4,
+          paddingVertical: 8,
+          backgroundColor: theme.colors.elevation.level2,
+          elevation: 0,
+          shadowOpacity: 0,
+        },
+        headerTitle: {
+          ...theme.fonts.titleMedium,
+          color: theme.colors.onSurface,
+          fontWeight: 'bold',
+          textAlign: 'center',
+          flex: 1,
+        },
+        headerSpacer: {
+          width: 48,
+        },
+      }),
+    [theme],
+  );
 
   return (
     <View style={styles.header}>

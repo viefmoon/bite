@@ -13,7 +13,6 @@ import {
 import type {
   SelectedPizzaCustomization,
   PizzaCustomization,
-  PizzaCustomizationInput,
 } from '../../pizzaCustomizations/schema/pizzaCustomization.schema';
 import type { PizzaConfiguration } from '../../pizzaCustomizations/schema/pizzaConfiguration.schema';
 import {
@@ -32,8 +31,16 @@ interface PizzaCustomizationSectionProps {
   getFlavorName: (flavorId: string) => string;
   showHalvesMode: boolean;
   handleFlavorToggle: (flavorId: string) => void;
-  toggleIngredient: (ingredientId: string, half: SelectedPizzaCustomization['half'], action: SelectedPizzaCustomization['action']) => void;
-  isIngredientSelected: (ingredientId: string, half: SelectedPizzaCustomization['half'], action: SelectedPizzaCustomization['action']) => boolean;
+  toggleIngredient: (
+    ingredientId: string,
+    half: SelectedPizzaCustomization['half'],
+    action: SelectedPizzaCustomization['action'],
+  ) => void;
+  isIngredientSelected: (
+    ingredientId: string,
+    half: SelectedPizzaCustomization['half'],
+    action: SelectedPizzaCustomization['action'],
+  ) => boolean;
   manualHalvesMode: boolean;
   handleManualHalvesModeToggle: (value: boolean) => void;
   expandedIngredients: {
@@ -43,7 +50,9 @@ interface PizzaCustomizationSectionProps {
   };
   expandedFlavors: boolean;
   toggleExpandedFlavors: () => void;
-  toggleExpandedIngredients: (section: SelectedPizzaCustomization['half']) => void;
+  toggleExpandedIngredients: (
+    section: SelectedPizzaCustomization['half'],
+  ) => void;
   PIZZA_HALF: typeof PizzaHalfEnum;
   CUSTOMIZATION_ACTION: typeof CustomizationActionEnum;
   loading?: boolean;
@@ -141,7 +150,6 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
     const theme = useAppTheme();
     const styles = useMemo(() => createStyles(theme), [theme]);
 
-
     // Returns condicionales al final, después de todos los hooks
     if (loading) {
       return (
@@ -152,7 +160,10 @@ const PizzaCustomizationSection = memo<PizzaCustomizationSectionProps>(
       );
     }
 
-    if (!pizzaConfiguration || (flavors.length === 0 && ingredients.length === 0)) {
+    if (
+      !pizzaConfiguration ||
+      (flavors.length === 0 && ingredients.length === 0)
+    ) {
       return null;
     }
 

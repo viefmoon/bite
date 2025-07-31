@@ -8,10 +8,10 @@ import {
 import { useOrderFormStore, useHasUnsavedChanges } from './useOrderFormStore';
 import { useOrderUIStore } from './useOrderUIStore';
 import {
-  validateOrder,
+  validateOrderForConfirmation,
+  getValidationErrors,
   prepareOrderForBackend,
   type OrderDetailsForBackend,
-  type OrderValidationResult,
 } from '../utils/orderUtils';
 import type { CartItem } from '../utils/cartUtils';
 
@@ -191,36 +191,38 @@ export const useOrderManagement = () => {
     formStore.setOriginalState(orderData);
   };
 
-  const getFormState = () => ({
-    orderType: formStore.orderType,
-    selectedAreaId: formStore.selectedAreaId,
-    selectedTableId: formStore.selectedTableId,
-    isTemporaryTable: formStore.isTemporaryTable,
-    temporaryTableName: formStore.temporaryTableName,
-    scheduledTime: formStore.scheduledTime,
-    deliveryInfo: formStore.deliveryInfo,
-    orderNotes: formStore.orderNotes,
-    adjustments: formStore.adjustments,
-  });
-
   const validateForConfirmation = () => {
-    const validation = validateOrder(
+    return validateOrderForConfirmation(
       cartStore.items,
-      getFormState(),
+      {
+        orderType: formStore.orderType,
+        selectedAreaId: formStore.selectedAreaId,
+        selectedTableId: formStore.selectedTableId,
+        isTemporaryTable: formStore.isTemporaryTable,
+        temporaryTableName: formStore.temporaryTableName,
+        scheduledTime: formStore.scheduledTime,
+        deliveryInfo: formStore.deliveryInfo,
+        orderNotes: formStore.orderNotes,
+        adjustments: formStore.adjustments,
+      },
       formStore.prepaymentId,
       formStore.prepaymentAmount,
       formStore.isEditMode,
     );
-
-    return {
-      isValid: validation.isValid,
-      errorMessage: validation.errors[0], // Mantener compatibilidad con la interfaz existente
-    };
   };
 
   const getValidationErrorsList = () => {
-    const validation = validateOrder(cartStore.items, getFormState());
-    return validation.errors;
+    return getValidationErrors(cartStore.items, {
+      orderType: formStore.orderType,
+      selectedAreaId: formStore.selectedAreaId,
+      selectedTableId: formStore.selectedTableId,
+      isTemporaryTable: formStore.isTemporaryTable,
+      temporaryTableName: formStore.temporaryTableName,
+      scheduledTime: formStore.scheduledTime,
+      deliveryInfo: formStore.deliveryInfo,
+      orderNotes: formStore.orderNotes,
+      adjustments: formStore.adjustments,
+    });
   };
 
   const prepareOrderForBackendData = (): OrderDetailsForBackend | null => {

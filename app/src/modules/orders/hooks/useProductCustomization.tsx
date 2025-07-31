@@ -8,19 +8,16 @@ import type {
   FullMenuModifierGroup,
 } from '../schema/orders.schema';
 import type { CartItemModifier, CartItem } from '../utils/cartUtils';
-import type {
-  SelectedPizzaCustomization,
-  PizzaCustomization,
-  PizzaCustomizationInput,
-} from '../../pizzaCustomizations/schema/pizzaCustomization.schema';
-import type { PizzaConfiguration } from '@/modules/pizzaCustomizations/schema/pizzaConfiguration.schema';
 import {
+  type SelectedPizzaCustomization,
+  type PizzaCustomization,
+  type PizzaCustomizationInput,
   PizzaHalfEnum,
   CustomizationActionEnum,
   CustomizationTypeEnum,
   type PizzaHalf,
-  type CustomizationAction,
-} from '@/modules/pizzaCustomizations/schema/pizzaCustomization.schema';
+} from '../../pizzaCustomizations/schema/pizzaCustomization.schema';
+import type { PizzaConfiguration } from '@/modules/pizzaCustomizations/schema/pizzaConfiguration.schema';
 
 // Constantes para los valores de pizza
 const PIZZA_HALF = {
@@ -190,7 +187,9 @@ export const useProductCustomization = ({
 
   // Determinar si mostrar modo mitades
   const showHalvesMode = useMemo(
-    () => selectedFlavors.length === 2 || (manualHalvesMode && selectedFlavors.length <= 1),
+    () =>
+      selectedFlavors.length === 2 ||
+      (manualHalvesMode && selectedFlavors.length <= 1),
     [selectedFlavors.length, manualHalvesMode],
   );
   const checkForChanges = useCallback(() => {
@@ -320,7 +319,9 @@ export const useProductCustomization = ({
               action: CUSTOMIZATION_ACTION.ADD,
             } as PizzaCustomizationInput,
           ];
-          setSelectedPizzaCustomizations(newCustomizations as SelectedPizzaCustomization[]);
+          setSelectedPizzaCustomizations(
+            newCustomizations as SelectedPizzaCustomization[],
+          );
         } else {
           setSelectedPizzaCustomizations(remainingFlavorSelections);
         }
@@ -353,7 +354,9 @@ export const useProductCustomization = ({
                 action: CUSTOMIZATION_ACTION.ADD,
               } as PizzaCustomizationInput,
             ];
-            setSelectedPizzaCustomizations(newCustomizations as SelectedPizzaCustomization[]);
+            setSelectedPizzaCustomizations(
+              newCustomizations as SelectedPizzaCustomization[],
+            );
           } else {
             const newCustomizations = [
               ...nonFlavorSelections,
@@ -363,7 +366,9 @@ export const useProductCustomization = ({
                 action: CUSTOMIZATION_ACTION.ADD,
               } as PizzaCustomizationInput,
             ];
-            setSelectedPizzaCustomizations(newCustomizations as SelectedPizzaCustomization[]);
+            setSelectedPizzaCustomizations(
+              newCustomizations as SelectedPizzaCustomization[],
+            );
           }
         } else if (currentFlavors.length === 1) {
           // Segundo sabor - convertir a mitades
@@ -384,20 +389,22 @@ export const useProductCustomization = ({
             } as PizzaCustomizationInput,
           ];
 
-          setSelectedPizzaCustomizations(newCustomizations as SelectedPizzaCustomization[]);
+          setSelectedPizzaCustomizations(
+            newCustomizations as SelectedPizzaCustomization[],
+          );
         }
       }
     },
-    [
-      selectedPizzaCustomizations,
-      flavors,
-      manualHalvesMode,
-    ],
+    [selectedPizzaCustomizations, flavors, manualHalvesMode],
   );
 
   // Lógica de manejo de ingredientes
   const toggleIngredient = useCallback(
-    (ingredientId: string, half: typeof PIZZA_HALF[keyof typeof PIZZA_HALF], action: typeof CUSTOMIZATION_ACTION[keyof typeof CUSTOMIZATION_ACTION]) => {
+    (
+      ingredientId: string,
+      half: (typeof PIZZA_HALF)[keyof typeof PIZZA_HALF],
+      action: (typeof CUSTOMIZATION_ACTION)[keyof typeof CUSTOMIZATION_ACTION],
+    ) => {
       const existingIndex = selectedPizzaCustomizations.findIndex(
         (sc) =>
           sc.pizzaCustomizationId === ingredientId &&
@@ -423,7 +430,7 @@ export const useProductCustomization = ({
           half,
           action,
         } as PizzaCustomizationInput;
-        
+
         newSelections.push(newCustomization as SelectedPizzaCustomization);
       }
 
@@ -436,8 +443,8 @@ export const useProductCustomization = ({
   const isIngredientSelected = useCallback(
     (
       ingredientId: string,
-      half: typeof PIZZA_HALF[keyof typeof PIZZA_HALF],
-      action: typeof CUSTOMIZATION_ACTION[keyof typeof CUSTOMIZATION_ACTION],
+      half: (typeof PIZZA_HALF)[keyof typeof PIZZA_HALF],
+      action: (typeof CUSTOMIZATION_ACTION)[keyof typeof CUSTOMIZATION_ACTION],
     ): boolean => {
       return selectedPizzaCustomizations.some(
         (sc) =>
@@ -467,10 +474,7 @@ export const useProductCustomization = ({
       // Si se desactiva el modo mitades y solo hay un sabor, convertir todo a FULL
       else if (!value && selectedFlavors.length === 1) {
         const updatedCustomizations = selectedPizzaCustomizations.map((sc) => {
-          if (
-            sc.half === PIZZA_HALF.HALF_1 ||
-            sc.half === PIZZA_HALF.HALF_2
-          ) {
+          if (sc.half === PIZZA_HALF.HALF_1 || sc.half === PIZZA_HALF.HALF_2) {
             return { ...sc, half: PIZZA_HALF.FULL };
           }
           return sc;
@@ -483,11 +487,11 @@ export const useProductCustomization = ({
 
   // Funciones para manejo de estado de expansión
   const toggleExpandedFlavors = useCallback(() => {
-    setExpandedFlavors(prev => !prev);
+    setExpandedFlavors((prev) => !prev);
   }, []);
 
   const toggleExpandedIngredients = useCallback((section: PizzaHalf) => {
-    setExpandedIngredients(prev => ({
+    setExpandedIngredients((prev) => ({
       ...prev,
       [section]: !prev[section],
     }));

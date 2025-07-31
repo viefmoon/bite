@@ -19,42 +19,46 @@ export const ShiftClosedView: React.FC<ShiftClosedViewProps> = ({
   const responsive = useResponsive();
   const { colors, fonts } = theme;
 
-  const styles = useMemo(() => StyleSheet.create({
-    safeArea: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    appBar: {
-      backgroundColor: colors.elevation.level2,
-      alignItems: 'center',
-    },
-    appBarTitle: {
-      ...fonts.titleMedium,
-      color: colors.onSurface,
-      fontWeight: 'bold',
-      textAlign: 'center',
-    },
-    appBarContent: {},
-    emptyStateContainer: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      padding: responsive.spacingPreset.l,
-    },
-    emptyStateTitle: {
-      marginTop: responsive.spacingPreset.l,
-      marginBottom: responsive.spacingPreset.m,
-      textAlign: 'center',
-      color: colors.onSurface,
-      fontWeight: '600',
-    },
-    emptyStateText: {
-      textAlign: 'center',
-      color: colors.onSurfaceVariant,
-      maxWidth: 320,
-      lineHeight: 24,
-    },
-  }), [colors, fonts, responsive]);
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        safeArea: {
+          flex: 1,
+          backgroundColor: colors.background,
+        },
+        appBar: {
+          backgroundColor: colors.elevation.level2,
+          alignItems: 'center',
+        },
+        appBarTitle: {
+          ...fonts.titleMedium,
+          color: colors.onSurface,
+          fontWeight: 'bold',
+          textAlign: 'center',
+        },
+        appBarContent: {},
+        emptyStateContainer: {
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: responsive.spacingPreset.l,
+        },
+        emptyStateTitle: {
+          marginTop: responsive.spacingPreset.l,
+          marginBottom: responsive.spacingPreset.m,
+          textAlign: 'center',
+          color: colors.onSurface,
+          fontWeight: '600',
+        },
+        emptyStateText: {
+          textAlign: 'center',
+          color: colors.onSurfaceVariant,
+          maxWidth: 320,
+          lineHeight: 24,
+        },
+      }),
+    [colors, fonts, responsive],
+  );
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['left', 'right', 'bottom']}>
