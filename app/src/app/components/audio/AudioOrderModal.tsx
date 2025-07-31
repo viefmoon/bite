@@ -1529,7 +1529,7 @@ export const AudioOrderModal: React.FC<AudioOrderModalProps> = ({
             setEditingItem(null);
             setEditingProduct(null);
           }}
-          onAddToCart={() => {}}
+          onAddItem={() => {}}
           onUpdateItem={handleUpdateEditedItem}
         />
       )}
