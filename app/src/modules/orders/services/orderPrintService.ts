@@ -1,9 +1,10 @@
 import apiClient from '@/app/services/apiClient';
 import { API_PATHS } from '@/app/constants/apiPaths';
+import { type TicketType } from '../schema/orders.schema';
 
 interface PrintTicketPayload {
   printerId: string;
-  ticketType: 'GENERAL' | 'BILLING';
+  ticketType: TicketType;
 }
 
 export const orderPrintService = {

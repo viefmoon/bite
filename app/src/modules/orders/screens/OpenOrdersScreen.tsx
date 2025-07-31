@@ -31,6 +31,7 @@ import {
   OrderOpenList,
   OrderType,
   OrderStatusEnum,
+  TicketType,
 } from '../schema/orders.schema';
 import { PrintTicketModal } from '../../shared/components/PrintTicketModal';
 import { orderPrintService } from '../services/orderPrintService';
@@ -289,7 +290,7 @@ const OpenOrdersScreen: React.FC<OpenOrdersScreenProps> = ({ navigation }) => {
 
   // Función para manejar la impresión del ticket
   const handlePrint = useCallback(
-    async (printerId: string, ticketType: 'GENERAL' | 'BILLING') => {
+    async (printerId: string, ticketType: TicketType) => {
       if (!orderToPrint) return;
 
       try {

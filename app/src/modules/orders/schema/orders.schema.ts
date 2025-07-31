@@ -16,6 +16,9 @@ import type {
   Order,
 } from '@/app/schemas/domain/order.schema';
 
+export const ticketTypeSchema = z.enum(['GENERAL', 'BILLING']);
+export type TicketType = z.infer<typeof ticketTypeSchema>;
+
 // Re-exportar tipos de dominio
 export type {
   Photo,

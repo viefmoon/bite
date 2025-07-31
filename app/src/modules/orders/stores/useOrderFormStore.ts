@@ -3,6 +3,33 @@ import { OrderTypeEnum, type OrderType } from '../schema/orders.schema';
 import type { DeliveryInfo } from '../../../app/schemas/domain/delivery-info.schema';
 import type { OrderAdjustment } from '../schema/adjustments.schema';
 
+// Utility function for deep equality comparison
+const deepEqual = (obj1: any, obj2: any): boolean => {
+  if (obj1 === obj2) return true;
+
+  if (obj1 == null || obj2 == null) return obj1 === obj2;
+
+  if (typeof obj1 !== typeof obj2) return false;
+
+  if (typeof obj1 !== 'object') return obj1 === obj2;
+
+  if (Array.isArray(obj1) !== Array.isArray(obj2)) return false;
+
+  if (Array.isArray(obj1)) {
+    if (obj1.length !== obj2.length) return false;
+    return obj1.every((item, index) => deepEqual(item, obj2[index]));
+  }
+
+  const keys1 = Object.keys(obj1);
+  const keys2 = Object.keys(obj2);
+
+  if (keys1.length !== keys2.length) return false;
+
+  return keys1.every(
+    (key) => keys2.includes(key) && deepEqual(obj1[key], obj2[key]),
+  );
+};
+
 // Función para normalizar items actuales del carrito (CartItem[])
 const normalizeCartItems = (items: any[]) => {
   return items
@@ -70,15 +97,28 @@ const normalizeOriginalItems = (items: any[]) => {
       }))
       .sort((a: any, b: any) => a.id.localeCompare(b.id));
 
-    // Crear clave de agrupación más simple
-    const key = JSON.stringify({
+    // Crear clave de agrupación usando concatenación de strings más confiable
+    const keyData = {
       productId: item.productId,
       variantId: item.productVariantId || null,
       preparationNotes: item.preparationNotes || '',
       modifiers: modifiers.sort((a, b) => a.id.localeCompare(b.id)),
       pizzaCustomizations,
       pizzaExtraCost: item.pizzaExtraCost || 0,
-    });
+    };
+
+    // Usar una función de hash más determinística
+    const createHashKey = (data: any): string => {
+      const sortedModifiers = data.modifiers
+        .map((m: any) => `${m.id}:${m.name}:${m.price}`)
+        .join('|');
+      const sortedCustomizations = data.pizzaCustomizations
+        .map((c: any) => `${c.id}:${c.name}:${c.extraCost}`)
+        .join('|');
+      return `${data.productId}_${data.variantId}_${data.preparationNotes}_${sortedModifiers}_${sortedCustomizations}_${data.pizzaExtraCost}`;
+    };
+
+    const key = createHashKey(keyData);
 
     if (!groupedItems[key]) {
       groupedItems[key] = [];
@@ -89,16 +129,47 @@ const normalizeOriginalItems = (items: any[]) => {
   // Convertir grupos a formato normalizado
   return Object.entries(groupedItems)
     .map(([keyStr, groupItems]) => {
-      const keyObj = JSON.parse(keyStr);
+      // Recuperar el objeto clave del primer item del grupo
+      const firstItem = groupItems[0];
+      const modifiers: any[] = [];
+
+      if (
+        firstItem.productModifiers &&
+        Array.isArray(firstItem.productModifiers)
+      ) {
+        firstItem.productModifiers.forEach((mod: any) => {
+          modifiers.push({
+            id: mod.id,
+            name: mod.name || 'Modificador',
+            price: mod.price || 0,
+          });
+        });
+      } else if (firstItem.modifiers && Array.isArray(firstItem.modifiers)) {
+        firstItem.modifiers.forEach((mod: any) => {
+          modifiers.push({
+            id: mod.productModifierId || mod.id,
+            name: mod.productModifier?.name || mod.name || 'Modificador',
+            price: mod.price || 0,
+          });
+        });
+      }
+
+      const pizzaCustomizations = (firstItem.selectedPizzaCustomizations || [])
+        .map((cust: any) => ({
+          id: cust.id,
+          name: cust.name,
+          extraCost: cust.extraCost || 0,
+        }))
+        .sort((a: any, b: any) => a.id.localeCompare(b.id));
 
       return {
-        productId: keyObj.productId,
+        productId: firstItem.productId,
         quantity: groupItems.length,
-        variantId: keyObj.variantId,
-        preparationNotes: keyObj.preparationNotes,
-        modifiers: keyObj.modifiers,
-        selectedPizzaCustomizations: keyObj.pizzaCustomizations,
-        pizzaExtraCost: keyObj.pizzaExtraCost,
+        variantId: firstItem.productVariantId || null,
+        preparationNotes: firstItem.preparationNotes || '',
+        modifiers: modifiers.sort((a, b) => a.id.localeCompare(b.id)),
+        selectedPizzaCustomizations: pizzaCustomizations,
+        pizzaExtraCost: firstItem.pizzaExtraCost || 0,
       };
     })
     .sort((a, b) =>
@@ -116,9 +187,7 @@ const deepCompareCartItems = (
   const normalizedCurrent = normalizeCartItems(currentItems);
   const normalizedOriginal = normalizeCartItems(originalItems); // Los originales ya están normalizados al guardarlos
 
-  return (
-    JSON.stringify(normalizedCurrent) === JSON.stringify(normalizedOriginal)
-  );
+  return deepEqual(normalizedCurrent, normalizedOriginal);
 };
 
 // Función para comparación profunda de ajustes
@@ -138,7 +207,7 @@ const deepCompareAdjustments = (
       }))
       .sort((a, b) => a.id.localeCompare(b.id));
 
-  return JSON.stringify(normalize(adj1)) === JSON.stringify(normalize(adj2));
+  return deepEqual(normalize(adj1), normalize(adj2));
 };
 
 interface OrderFormState {
@@ -406,8 +475,7 @@ export const useHasUnsavedChanges = (currentItems: any[] = []) => {
       state.selectedTableId !== state.originalState.tableId ||
       state.isTemporaryTable !== state.originalState.isTemporaryTable ||
       state.temporaryTableName !== state.originalState.temporaryTableName ||
-      JSON.stringify(state.deliveryInfo) !==
-        JSON.stringify(state.originalState.deliveryInfo) ||
+      !deepEqual(state.deliveryInfo, state.originalState.deliveryInfo) ||
       state.orderNotes !== state.originalState.notes ||
       (state.scheduledTime?.getTime() ?? null) !==
         (state.originalState.scheduledAt?.getTime() ?? null) ||

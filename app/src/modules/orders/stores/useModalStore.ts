@@ -17,16 +17,129 @@ export type ModalType =
   | 'prepayment'
   | null;
 
+export interface TimePickerProps {
+  scheduledTime: Date | null;
+  orderType: string;
+  onTimeConfirm: (date: Date) => void;
+  hideTimePicker: () => void;
+}
+
+export interface ExitConfirmationProps {
+  onClose?: () => void;
+}
+
+export interface CancelConfirmationProps {
+  orderNumber?: number;
+  onCancelOrder?: () => void;
+}
+
+export interface ModifyInProgressConfirmationProps {
+  modifyingItemName: string;
+  pendingModifyAction: (() => void) | null;
+  setPendingModifyAction: (action: (() => void) | null) => void;
+  setModifyingItemName: (name: string) => void;
+}
+
+export interface DeletePrepaymentConfirmProps {
+  confirmDeletePrepayment: () => Promise<void>;
+}
+
+export interface ProductCustomizationProps {
+  editingProduct: any;
+  editingItemFromList: CartItem | null;
+  clearEditingState: () => void;
+  handleUpdateEditedItem: (
+    itemId: string,
+    quantity: number,
+    modifiers: any[],
+    preparationNotes?: string,
+    variantId?: string,
+    variantName?: string,
+    unitPrice?: number,
+    selectedPizzaCustomizations?: any[],
+    pizzaExtraCost?: number,
+  ) => void;
+}
+
+export interface OrderDetailProps {
+  orderId?: string | null;
+  orderNumber?: number;
+  orderData?: any;
+}
+
+export interface OrderHistoryProps {
+  orderId?: string | null;
+  orderNumber?: number;
+}
+
+export interface PaymentProps {
+  orderId?: string;
+  orderTotal: number;
+  orderNumber?: number;
+  orderStatus?: string;
+  existingPayments?: any[];
+  onOrderCompleted?: () => void;
+  onPaymentRegistered?: () => void;
+  onClose?: () => void;
+}
+
+export interface AdjustmentProps {
+  adjustmentToEdit: OrderAdjustment | null;
+  setAdjustmentToEdit: (adjustment: OrderAdjustment | null) => void;
+  handleAddAdjustment: (adjustment: OrderAdjustment) => void;
+  handleUpdateAdjustment: (id: string, adjustment: OrderAdjustment) => void;
+  subtotal: number;
+}
+
+export interface PrepaymentProps {
+  orderTotal: number;
+  prepaymentId: string | null;
+  handlePrepaymentCreated: (
+    prepaymentIdCreated: string,
+    amount: number,
+    method: 'CASH' | 'CARD' | 'TRANSFER',
+  ) => void;
+  handlePrepaymentDeleted: () => void;
+}
+
+export type ModalProps =
+  | TimePickerProps
+  | ExitConfirmationProps
+  | CancelConfirmationProps
+  | ModifyInProgressConfirmationProps
+  | DeletePrepaymentConfirmProps
+  | ProductCustomizationProps
+  | OrderDetailProps
+  | OrderHistoryProps
+  | PaymentProps
+  | AdjustmentProps
+  | PrepaymentProps
+  | Record<string, never>;
+
 interface ModalState {
   modalType: ModalType;
-  modalProps: any;
+  modalProps: ModalProps;
   isVisible: boolean;
 }
 
 interface ModalActions {
-  showModal: (type: ModalType, props?: any) => void;
+  showModal: (type: ModalType, props?: ModalProps) => void;
   hideModal: () => void;
-  updateModalProps: (props: any) => void;
+  updateModalProps: (props: Partial<ModalProps>) => void;
+  showTimePicker: (props: TimePickerProps) => void;
+  showTimeAlert: () => void;
+  showExitConfirmation: (props: ExitConfirmationProps) => void;
+  showCancelConfirmation: (props: CancelConfirmationProps) => void;
+  showModifyInProgressConfirmation: (
+    props: ModifyInProgressConfirmationProps,
+  ) => void;
+  showDeletePrepaymentConfirm: (props: DeletePrepaymentConfirmProps) => void;
+  showProductCustomization: (props: ProductCustomizationProps) => void;
+  showOrderDetail: (props: OrderDetailProps) => void;
+  showOrderHistory: (props: OrderHistoryProps) => void;
+  showPayment: (props: PaymentProps) => void;
+  showAdjustment: (props: AdjustmentProps) => void;
+  showPrepayment: (props: PrepaymentProps) => void;
 }
 
 export interface ModalStore extends ModalState, ModalActions {}
@@ -52,124 +165,107 @@ export const useModalStore = create<ModalStore>((set) => ({
     });
   },
 
-  updateModalProps: (props: any) => {
+  updateModalProps: (props: Partial<ModalProps>) => {
     set((state) => ({
-      modalProps: { ...state.modalProps, ...props },
+      modalProps: { ...state.modalProps, ...props } as ModalProps,
     }));
   },
-}));
 
-export const modalHelpers = {
-  showTimePicker: (props: {
-    scheduledTime: Date | null;
-    orderType: string;
-    onTimeConfirm: (date: Date) => void;
-    hideTimePicker: () => void;
-  }) => {
-    useModalStore.getState().showModal('timePicker', props);
+  showTimePicker: (props: TimePickerProps) => {
+    set({
+      modalType: 'timePicker',
+      modalProps: props,
+      isVisible: true,
+    });
   },
 
   showTimeAlert: () => {
-    useModalStore.getState().showModal('timeAlert');
+    set({
+      modalType: 'timeAlert',
+      modalProps: {},
+      isVisible: true,
+    });
   },
 
-  showExitConfirmation: (props: { onClose?: () => void }) => {
-    useModalStore.getState().showModal('exitConfirmation', props);
+  showExitConfirmation: (props: ExitConfirmationProps) => {
+    set({
+      modalType: 'exitConfirmation',
+      modalProps: props,
+      isVisible: true,
+    });
   },
 
-  showCancelConfirmation: (props: {
-    orderNumber?: number;
-    onCancelOrder?: () => void;
-  }) => {
-    useModalStore.getState().showModal('cancelConfirmation', props);
+  showCancelConfirmation: (props: CancelConfirmationProps) => {
+    set({
+      modalType: 'cancelConfirmation',
+      modalProps: props,
+      isVisible: true,
+    });
   },
 
-  showModifyInProgressConfirmation: (props: {
-    modifyingItemName: string;
-    pendingModifyAction: (() => void) | null;
-    setPendingModifyAction: (action: (() => void) | null) => void;
-    setModifyingItemName: (name: string) => void;
-  }) => {
-    useModalStore.getState().showModal('modifyInProgressConfirmation', props);
+  showModifyInProgressConfirmation: (
+    props: ModifyInProgressConfirmationProps,
+  ) => {
+    set({
+      modalType: 'modifyInProgressConfirmation',
+      modalProps: props,
+      isVisible: true,
+    });
   },
 
-  showDeletePrepaymentConfirm: (props: {
-    confirmDeletePrepayment: () => Promise<void>;
-  }) => {
-    useModalStore.getState().showModal('deletePrepaymentConfirm', props);
+  showDeletePrepaymentConfirm: (props: DeletePrepaymentConfirmProps) => {
+    set({
+      modalType: 'deletePrepaymentConfirm',
+      modalProps: props,
+      isVisible: true,
+    });
   },
 
-  showProductCustomization: (props: {
-    editingProduct: any;
-    editingItemFromList: CartItem | null;
-    clearEditingState: () => void;
-    handleUpdateEditedItem: (
-      itemId: string,
-      quantity: number,
-      modifiers: any[],
-      preparationNotes?: string,
-      variantId?: string,
-      variantName?: string,
-      unitPrice?: number,
-      selectedPizzaCustomizations?: any[],
-      pizzaExtraCost?: number,
-    ) => void;
-  }) => {
-    useModalStore.getState().showModal('productCustomization', props);
+  showProductCustomization: (props: ProductCustomizationProps) => {
+    set({
+      modalType: 'productCustomization',
+      modalProps: props,
+      isVisible: true,
+    });
   },
 
-  showOrderDetail: (props: {
-    orderId?: string | null;
-    orderNumber?: number;
-    orderData?: any;
-  }) => {
-    useModalStore.getState().showModal('orderDetail', props);
+  showOrderDetail: (props: OrderDetailProps) => {
+    set({
+      modalType: 'orderDetail',
+      modalProps: props,
+      isVisible: true,
+    });
   },
 
-  showOrderHistory: (props: {
-    orderId?: string | null;
-    orderNumber?: number;
-  }) => {
-    useModalStore.getState().showModal('orderHistory', props);
+  showOrderHistory: (props: OrderHistoryProps) => {
+    set({
+      modalType: 'orderHistory',
+      modalProps: props,
+      isVisible: true,
+    });
   },
 
-  showPayment: (props: {
-    orderId?: string;
-    orderTotal: number;
-    orderNumber?: number;
-    orderStatus?: string;
-    existingPayments?: any[];
-    onOrderCompleted?: () => void;
-    onPaymentRegistered?: () => void;
-    onClose?: () => void;
-  }) => {
-    useModalStore.getState().showModal('payment', props);
+  showPayment: (props: PaymentProps) => {
+    set({
+      modalType: 'payment',
+      modalProps: props,
+      isVisible: true,
+    });
   },
 
-  showAdjustment: (props: {
-    adjustmentToEdit: OrderAdjustment | null;
-    setAdjustmentToEdit: (adjustment: OrderAdjustment | null) => void;
-    handleAddAdjustment: (adjustment: OrderAdjustment) => void;
-    handleUpdateAdjustment: (id: string, adjustment: OrderAdjustment) => void;
-    subtotal: number;
-  }) => {
-    useModalStore.getState().showModal('adjustment', props);
+  showAdjustment: (props: AdjustmentProps) => {
+    set({
+      modalType: 'adjustment',
+      modalProps: props,
+      isVisible: true,
+    });
   },
 
-  showPrepayment: (props: {
-    orderTotal: number;
-    prepaymentId: string | null;
-    handlePrepaymentCreated: (
-      prepaymentIdCreated: string,
-      amount: number,
-      method: 'CASH' | 'CARD' | 'TRANSFER',
-    ) => void;
-    handlePrepaymentDeleted: () => void;
-  }) => {
-    useModalStore.getState().showModal('prepayment', props);
+  showPrepayment: (props: PrepaymentProps) => {
+    set({
+      modalType: 'prepayment',
+      modalProps: props,
+      isVisible: true,
+    });
   },
-
-  hideModal: () => {
-    useModalStore.getState().hideModal();
-  },
-};
+}));

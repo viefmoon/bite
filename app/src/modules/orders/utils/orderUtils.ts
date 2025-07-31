@@ -44,26 +44,32 @@ interface OrderFormState {
   adjustments: OrderAdjustment[];
 }
 
-interface ValidationResult {
+export interface OrderValidationResult {
   isValid: boolean;
-  errorMessage?: string;
+  errors: string[];
 }
 
-export const validateOrderForConfirmation = (
+/**
+ * Valida una orden y retorna tanto el estado de validez como la lista de errores.
+ * Esto unifica las funciones validateOrderForConfirmation y getValidationErrors
+ * siguiendo el principio DRY.
+ */
+export const validateOrder = (
   items: CartItem[],
   formState: OrderFormState,
   prepaymentId?: string | null,
   prepaymentAmount?: string,
   isEditMode: boolean = false,
-): ValidationResult => {
+): OrderValidationResult => {
+  const errors: string[] = [];
+
+  // Validar que haya productos en el carrito
   if (items.length === 0) {
-    return {
-      isValid: false,
-      errorMessage: 'No hay productos en el carrito',
-    };
+    errors.push('No hay productos en el carrito');
   }
 
-  if (!isEditMode && prepaymentId) {
+  // Validar prepago si existe
+  if (!isEditMode && prepaymentId && items.length > 0) {
     const subtotal = items.reduce((sum, item) => sum + item.totalPrice, 0);
     const adjustmentTotal = formState.adjustments.reduce((sum, adj) => {
       if (adj.isDeleted) return sum;
@@ -72,122 +78,39 @@ export const validateOrderForConfirmation = (
     const total = subtotal + adjustmentTotal;
 
     if ((Number(prepaymentAmount) || 0) > total) {
-      return {
-        isValid: false,
-        errorMessage:
-          'El prepago excede el total de la orden. Por favor edite el pago antes de continuar.',
-      };
+      errors.push(
+        'El prepago excede el total de la orden. Por favor edite el pago antes de continuar.',
+      );
     }
   }
 
-  // Validaciones específicas según el tipo de orden
-  switch (formState.orderType) {
-    case OrderTypeEnum.DINE_IN:
-      if (!formState.isTemporaryTable && !formState.selectedTableId) {
-        return {
-          isValid: false,
-          errorMessage: 'Por favor selecciona una mesa',
-        };
-      }
-      if (formState.isTemporaryTable && !formState.temporaryTableName.trim()) {
-        return {
-          isValid: false,
-          errorMessage: 'Por favor ingresa el nombre de la mesa temporal',
-        };
-      }
-      if (formState.isTemporaryTable && !formState.selectedAreaId) {
-        return {
-          isValid: false,
-          errorMessage: 'Por favor selecciona un área para la mesa temporal',
-        };
-      }
-      break;
-
-    case OrderTypeEnum.DELIVERY:
-      if (!formState.deliveryInfo.fullAddress?.trim()) {
-        return {
-          isValid: false,
-          errorMessage: 'Por favor ingresa la dirección de entrega',
-        };
-      }
-      // Validar teléfono si se proporciona (opcional pero debe ser válido)
-      if (formState.deliveryInfo.recipientPhone?.trim()) {
-        const phoneDigits = formState.deliveryInfo.recipientPhone.replace(
-          /\D/g,
-          '',
-        );
-        if (phoneDigits.length < 10) {
-          return {
-            isValid: false,
-            errorMessage:
-              'El número de teléfono debe tener al menos 10 dígitos',
-          };
-        }
-      }
-      break;
-
-    case OrderTypeEnum.TAKE_AWAY:
-      if (!formState.deliveryInfo.recipientName?.trim()) {
-        return {
-          isValid: false,
-          errorMessage: 'Por favor ingresa el nombre del cliente',
-        };
-      }
-      // Validar teléfono si se proporciona (opcional pero debe ser válido)
-      if (formState.deliveryInfo.recipientPhone?.trim()) {
-        const phoneDigits = formState.deliveryInfo.recipientPhone.replace(
-          /\D/g,
-          '',
-        );
-        if (phoneDigits.length < 10) {
-          return {
-            isValid: false,
-            errorMessage:
-              'El número de teléfono debe tener al menos 10 dígitos',
-          };
-        }
-      }
-      break;
-  }
-
-  return { isValid: true };
-};
-
-export const getValidationErrors = (
-  items: CartItem[],
-  formState: OrderFormState,
-): string[] => {
-  const errors: string[] = [];
-
-  if (items.length === 0) {
-    errors.push('El carrito está vacío');
-  }
+  // Validar teléfono (función auxiliar)
+  const validatePhone = (phone: string): boolean => {
+    const phoneDigits = phone.replace(/\D/g, '');
+    return phoneDigits.length >= 10;
+  };
 
   // Validaciones específicas según el tipo de orden
   switch (formState.orderType) {
     case OrderTypeEnum.DINE_IN:
       if (!formState.isTemporaryTable && !formState.selectedTableId) {
-        errors.push('Selecciona una mesa');
+        errors.push('Por favor selecciona una mesa');
       }
       if (formState.isTemporaryTable && !formState.temporaryTableName.trim()) {
-        errors.push('Ingresa el nombre de la mesa temporal');
+        errors.push('Por favor ingresa el nombre de la mesa temporal');
       }
       if (formState.isTemporaryTable && !formState.selectedAreaId) {
-        errors.push('Selecciona un área para la mesa temporal');
+        errors.push('Por favor selecciona un área para la mesa temporal');
       }
       break;
 
     case OrderTypeEnum.DELIVERY:
       if (!formState.deliveryInfo.fullAddress?.trim()) {
-        errors.push('Ingresa la dirección de entrega');
+        errors.push('Por favor ingresa la dirección de entrega');
       }
       // Validar teléfono si se proporciona (opcional pero debe ser válido)
       if (formState.deliveryInfo.recipientPhone?.trim()) {
-        const phoneDigits = formState.deliveryInfo.recipientPhone.replace(
-          /\D/g,
-          '',
-        );
-        if (phoneDigits.length < 10) {
+        if (!validatePhone(formState.deliveryInfo.recipientPhone)) {
           errors.push('El número de teléfono debe tener al menos 10 dígitos');
         }
       }
@@ -195,22 +118,21 @@ export const getValidationErrors = (
 
     case OrderTypeEnum.TAKE_AWAY:
       if (!formState.deliveryInfo.recipientName?.trim()) {
-        errors.push('Ingresa el nombre del cliente');
+        errors.push('Por favor ingresa el nombre del cliente');
       }
       // Validar teléfono si se proporciona (opcional pero debe ser válido)
       if (formState.deliveryInfo.recipientPhone?.trim()) {
-        const phoneDigits = formState.deliveryInfo.recipientPhone.replace(
-          /\D/g,
-          '',
-        );
-        if (phoneDigits.length < 10) {
+        if (!validatePhone(formState.deliveryInfo.recipientPhone)) {
           errors.push('El número de teléfono debe tener al menos 10 dígitos');
         }
       }
       break;
   }
 
-  return errors;
+  return {
+    isValid: errors.length === 0,
+    errors,
+  };
 };
 
 export const prepareOrderForBackend = (
@@ -220,7 +142,7 @@ export const prepareOrderForBackend = (
   orderId?: string | null,
   prepaymentId?: string | null,
 ): OrderDetailsForBackend | null => {
-  const validation = validateOrderForConfirmation(
+  const validation = validateOrder(
     items,
     formState,
     prepaymentId,
