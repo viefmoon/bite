@@ -1,12 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, ActivityIndicator } from 'react-native';
-import { 
-  Text, 
-  IconButton, 
-  Surface, 
-  Chip, 
-  Avatar, 
-  Button
+import {
+  Text,
+  IconButton,
+  Surface,
+  Chip,
+  Avatar,
+  Button,
 } from 'react-native-paper';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -44,28 +44,40 @@ const HistoryItemCard: React.FC<{
 
   const getOperationIcon = (operation: string) => {
     switch (operation) {
-      case 'INSERT': return 'plus-circle';
-      case 'UPDATE': return 'pencil-circle';
-      case 'DELETE': return 'delete-circle';
-      default: return 'help-circle';
+      case 'INSERT':
+        return 'plus-circle';
+      case 'UPDATE':
+        return 'pencil-circle';
+      case 'DELETE':
+        return 'delete-circle';
+      default:
+        return 'help-circle';
     }
   };
 
   const getOperationLabel = (operation: string) => {
     switch (operation) {
-      case 'INSERT': return 'Creada';
-      case 'UPDATE': return 'Modificada';
-      case 'DELETE': return 'Eliminada';
-      default: return operation;
+      case 'INSERT':
+        return 'Creada';
+      case 'UPDATE':
+        return 'Modificada';
+      case 'DELETE':
+        return 'Eliminada';
+      default:
+        return operation;
     }
   };
 
   const getOperationColor = (operation: string) => {
     switch (operation) {
-      case 'INSERT': return theme.colors.primary;
-      case 'UPDATE': return theme.colors.secondary;
-      case 'DELETE': return theme.colors.error;
-      default: return theme.colors.onSurface;
+      case 'INSERT':
+        return theme.colors.primary;
+      case 'UPDATE':
+        return theme.colors.secondary;
+      case 'DELETE':
+        return theme.colors.error;
+      default:
+        return theme.colors.onSurface;
     }
   };
 
@@ -88,7 +100,12 @@ const HistoryItemCard: React.FC<{
     } else if (change.type === 'removed') {
       return (
         <View style={styles.changeValues}>
-          <Text style={[styles.oldValue, { color: theme.colors.error, textDecorationLine: 'line-through' }]}>
+          <Text
+            style={[
+              styles.oldValue,
+              { color: theme.colors.error, textDecorationLine: 'line-through' },
+            ]}
+          >
             {change.value} (removido)
           </Text>
         </View>
@@ -99,7 +116,9 @@ const HistoryItemCard: React.FC<{
           <Text style={[styles.oldValue, { color: theme.colors.error }]}>
             {change.anterior}
           </Text>
-          <Text style={[styles.arrow, { color: theme.colors.onSurfaceVariant }]}>
+          <Text
+            style={[styles.arrow, { color: theme.colors.onSurfaceVariant }]}
+          >
             →
           </Text>
           <Text style={[styles.newValue, { color: theme.colors.primary }]}>
@@ -114,7 +133,9 @@ const HistoryItemCard: React.FC<{
           <Text style={[styles.oldValue, { color: theme.colors.error }]}>
             {change.anterior || 'No especificado'}
           </Text>
-          <Text style={[styles.arrow, { color: theme.colors.onSurfaceVariant }]}>
+          <Text
+            style={[styles.arrow, { color: theme.colors.onSurfaceVariant }]}
+          >
             →
           </Text>
           <Text style={[styles.newValue, { color: theme.colors.primary }]}>
@@ -129,98 +150,175 @@ const HistoryItemCard: React.FC<{
     if (!item.formattedChanges || !expanded) return null;
 
     return (
-      <View style={[styles.expandedContent, { borderTopColor: theme.colors.outlineVariant }]}>
+      <View
+        style={[
+          styles.expandedContent,
+          { borderTopColor: theme.colors.outlineVariant },
+        ]}
+      >
         {/* Cambios en la orden */}
         {item.formattedChanges['Cambios en la orden'] && (
-          <View style={[styles.sectionContainer, { backgroundColor: theme.colors.elevation.level1 }]}>
-            <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+          <View
+            style={[
+              styles.sectionContainer,
+              { backgroundColor: theme.colors.elevation.level1 },
+            ]}
+          >
+            <Text
+              style={[styles.sectionTitle, { color: theme.colors.onSurface }]}
+            >
               🏷️ Cambios en la orden:
             </Text>
-            {Object.entries(item.formattedChanges['Cambios en la orden'] as Record<string, any>).map(
-              ([field, change]) => (
-                <View key={field} style={styles.changeRow}>
-                  <Text style={[styles.fieldLabel, { color: theme.colors.onSurfaceVariant }]}>
-                    • {field}:
-                  </Text>
-                  {renderChangeValue(change)}
-                </View>
-              ),
-            )}
+            {Object.entries(
+              item.formattedChanges['Cambios en la orden'] as Record<
+                string,
+                any
+              >,
+            ).map(([field, change]) => (
+              <View key={field} style={styles.changeRow}>
+                <Text
+                  style={[
+                    styles.fieldLabel,
+                    { color: theme.colors.onSurfaceVariant },
+                  ]}
+                >
+                  • {field}:
+                </Text>
+                {renderChangeValue(change)}
+              </View>
+            ))}
           </View>
         )}
 
         {/* Información de entrega */}
         {item.formattedChanges['Información de entrega'] && (
-          <View style={[styles.sectionContainer, { backgroundColor: theme.colors.elevation.level1 }]}>
-            <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+          <View
+            style={[
+              styles.sectionContainer,
+              { backgroundColor: theme.colors.elevation.level1 },
+            ]}
+          >
+            <Text
+              style={[styles.sectionTitle, { color: theme.colors.onSurface }]}
+            >
               🚚 Información de entrega:
             </Text>
-            {Object.entries(item.formattedChanges['Información de entrega'] as Record<string, any>).map(
-              ([field, change]) => (
-                <View key={field} style={styles.changeRow}>
-                  <Text style={[styles.fieldLabel, { color: theme.colors.onSurfaceVariant }]}>
-                    • {field}:
-                  </Text>
-                  {renderChangeValue(change)}
-                </View>
-              ),
-            )}
+            {Object.entries(
+              item.formattedChanges['Información de entrega'] as Record<
+                string,
+                any
+              >,
+            ).map(([field, change]) => (
+              <View key={field} style={styles.changeRow}>
+                <Text
+                  style={[
+                    styles.fieldLabel,
+                    { color: theme.colors.onSurfaceVariant },
+                  ]}
+                >
+                  • {field}:
+                </Text>
+                {renderChangeValue(change)}
+              </View>
+            ))}
           </View>
         )}
 
         {/* Cambios en productos */}
         {item.formattedChanges['Cambios en productos'] && (
-          <View style={[styles.sectionContainer, { backgroundColor: theme.colors.elevation.level1 }]}>
-            <Text style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+          <View
+            style={[
+              styles.sectionContainer,
+              { backgroundColor: theme.colors.elevation.level1 },
+            ]}
+          >
+            <Text
+              style={[styles.sectionTitle, { color: theme.colors.onSurface }]}
+            >
               🍕 Cambios en productos:
             </Text>
-            {Object.entries(item.formattedChanges['Cambios en productos'] as Record<string, any>).map(
-              ([operationType, items]) => {
-                if (Array.isArray(items)) {
-                  return (
-                    <View key={operationType} style={styles.productSection}>
-                      <Text style={[styles.productOperationType, { color: theme.colors.primary }]}>
-                        {operationType}:
-                      </Text>
-                      {items.map((item: any, idx: number) => (
-                        <View key={idx} style={styles.productItemContainer}>
-                          {typeof item === 'string' ? (
-                            <Text style={[styles.productItem, { color: theme.colors.onSurface }]}>
-                              • {item}
+            {Object.entries(
+              item.formattedChanges['Cambios en productos'] as Record<
+                string,
+                any
+              >,
+            ).map(([operationType, items]) => {
+              if (Array.isArray(items)) {
+                return (
+                  <View key={operationType} style={styles.productSection}>
+                    <Text
+                      style={[
+                        styles.productOperationType,
+                        { color: theme.colors.primary },
+                      ]}
+                    >
+                      {operationType}:
+                    </Text>
+                    {items.map((item: any, idx: number) => (
+                      <View key={idx} style={styles.productItemContainer}>
+                        {typeof item === 'string' ? (
+                          <Text
+                            style={[
+                              styles.productItem,
+                              { color: theme.colors.onSurface },
+                            ]}
+                          >
+                            • {item}
+                          </Text>
+                        ) : (
+                          <View style={styles.productChangeContainer}>
+                            <Text
+                              style={[
+                                styles.productChangeLabel,
+                                { color: theme.colors.onSurfaceVariant },
+                              ]}
+                            >
+                              • Antes:
                             </Text>
-                          ) : (
-                            <View style={styles.productChangeContainer}>
-                              <Text style={[styles.productChangeLabel, { color: theme.colors.onSurfaceVariant }]}>
-                                • Antes:
-                              </Text>
-                              <Text style={[styles.productChangeValue, { color: theme.colors.error }]}>
-                                {item.antes}
-                              </Text>
-                              <Text style={[styles.productChangeLabel, { color: theme.colors.onSurfaceVariant }]}>
-                                Después:
-                              </Text>
-                              <Text style={[styles.productChangeValue, { color: theme.colors.primary }]}>
-                                {item.después}
-                              </Text>
-                            </View>
-                          )}
-                        </View>
-                      ))}
-                    </View>
-                  );
-                }
-                return null;
-              },
-            )}
+                            <Text
+                              style={[
+                                styles.productChangeValue,
+                                { color: theme.colors.error },
+                              ]}
+                            >
+                              {item.antes}
+                            </Text>
+                            <Text
+                              style={[
+                                styles.productChangeLabel,
+                                { color: theme.colors.onSurfaceVariant },
+                              ]}
+                            >
+                              Después:
+                            </Text>
+                            <Text
+                              style={[
+                                styles.productChangeValue,
+                                { color: theme.colors.primary },
+                              ]}
+                            >
+                              {item.después}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+                    ))}
+                  </View>
+                );
+              }
+              return null;
+            })}
           </View>
         )}
-
       </View>
     );
   };
 
   return (
-    <Surface style={[styles.historyItem, { backgroundColor: theme.colors.surface }]} elevation={1}>
+    <Surface
+      style={[styles.historyItem, { backgroundColor: theme.colors.surface }]}
+      elevation={1}
+    >
       <View style={styles.historyItemHeader}>
         <View style={styles.historyItemLeft}>
           <Avatar.Icon
@@ -243,19 +341,34 @@ const HistoryItemCard: React.FC<{
                 styles.operationChip,
                 { backgroundColor: getOperationColor(item.operation) + '20' },
               ]}
-              textStyle={[styles.operationChipText, { color: getOperationColor(item.operation) }]}
+              textStyle={[
+                styles.operationChipText,
+                { color: getOperationColor(item.operation) },
+              ]}
               compact
             >
               {getOperationLabel(item.operation)}
             </Chip>
-            <Text style={[styles.userText, { color: theme.colors.onSurfaceVariant }]}>
+            <Text
+              style={[
+                styles.userText,
+                { color: theme.colors.onSurfaceVariant },
+              ]}
+            >
               {getUserDisplayName()}
             </Text>
           </View>
         </View>
         <View style={styles.historyItemRight}>
-          <Text style={[styles.timestampText, { color: theme.colors.onSurfaceVariant }]}>
-            {format(new Date(item.changedAt), 'dd/MM/yyyy HH:mm', { locale: es })}
+          <Text
+            style={[
+              styles.timestampText,
+              { color: theme.colors.onSurfaceVariant },
+            ]}
+          >
+            {format(new Date(item.changedAt), 'dd/MM/yyyy HH:mm', {
+              locale: es,
+            })}
           </Text>
           <IconButton
             icon={expanded ? 'chevron-up' : 'chevron-down'}
@@ -304,7 +417,9 @@ export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
       return (
         <View style={styles.centeredContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={[styles.centeredText, { color: theme.colors.onSurface }]}>
+          <Text
+            style={[styles.centeredText, { color: theme.colors.onSurface }]}
+          >
             Cargando historial...
           </Text>
         </View>
@@ -317,7 +432,11 @@ export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
           <Text style={[styles.errorText, { color: theme.colors.error }]}>
             Error al cargar el historial de la orden
           </Text>
-          <Button onPress={() => refetch()} mode="contained" style={styles.retryButton}>
+          <Button
+            onPress={() => refetch()}
+            mode="contained"
+            style={styles.retryButton}
+          >
             Reintentar
           </Button>
         </View>
@@ -328,7 +447,12 @@ export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
       return (
         <View style={styles.centeredContainer}>
           <Text style={styles.emptyIcon}>📋</Text>
-          <Text style={[styles.centeredText, { color: theme.colors.onSurfaceVariant }]}>
+          <Text
+            style={[
+              styles.centeredText,
+              { color: theme.colors.onSurfaceVariant },
+            ]}
+          >
             No hay historial disponible para esta orden
           </Text>
         </View>
@@ -338,12 +462,22 @@ export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
     return (
       <View style={styles.historyContainer}>
         {/* Subtitle con contador */}
-        <View style={[styles.subtitleContainer, { backgroundColor: theme.colors.elevation.level1 }]}>
-          <Text style={[styles.subtitleText, { color: theme.colors.onSurfaceVariant }]}>
+        <View
+          style={[
+            styles.subtitleContainer,
+            { backgroundColor: theme.colors.elevation.level1 },
+          ]}
+        >
+          <Text
+            style={[
+              styles.subtitleText,
+              { color: theme.colors.onSurfaceVariant },
+            ]}
+          >
             {historyData.length} cambios registrados
           </Text>
         </View>
-        
+
         {/* Lista de cambios */}
         <View style={styles.historyList}>
           {historyData.map((item: HistoryItemData) => (
@@ -391,7 +525,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
-  
+
   // Estados centralizados
   centeredContainer: {
     flex: 1,

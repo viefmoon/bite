@@ -10,7 +10,8 @@ import {
 import { useAuthStore } from '@/app/stores/authStore';
 import { Product, Category, SubCategory } from '../../schema/orders.schema';
 import { canOpenShift } from '@/app/utils/roleUtils';
-import { useAppTheme } from '@/app/styles/theme';
+import { useOrderScreenNavigation } from '../useOrderScreenNavigation';
+import { useOrderScreenStyles } from '../useOrderScreenStyles';
 import {
   useOrderNavigation,
   useProductSelection,
@@ -25,7 +26,6 @@ import {
  */
 export const useOrderCreationScreen = () => {
   const navigation = useNavigation();
-  const theme = useAppTheme();
 
   // Estados globales
   const {
@@ -84,57 +84,16 @@ export const useOrderCreationScreen = () => {
     isCartEmpty,
   });
 
-  // Estados derivados para la UI
-  const selectedCategory = useMemo(
-    () =>
-      menu && Array.isArray(menu)
-        ? menu.find((cat: Category) => cat.id === selectedCategoryId)
-        : null,
-    [menu, selectedCategoryId],
-  );
+  // Hooks especializados para navegación y estilos
+  const screenNavigation = useOrderScreenNavigation({
+    menu,
+    navigationLevel,
+    selectedCategoryId,
+    selectedSubcategoryId,
+    selectedProduct,
+  });
 
-  const selectedSubCategory = useMemo(
-    () =>
-      selectedCategory && Array.isArray(selectedCategory.subcategories)
-        ? selectedCategory.subcategories.find(
-            (sub: SubCategory) => sub.id === selectedSubcategoryId,
-          )
-        : null,
-    [selectedCategory, selectedSubcategoryId],
-  );
-
-  const itemsToDisplay = useMemo(() => {
-    switch (navigationLevel) {
-      case 'categories':
-        return menu && Array.isArray(menu) ? menu : [];
-      case 'subcategories':
-        return selectedCategory?.subcategories || [];
-      case 'products':
-        return selectedSubCategory?.products || [];
-      default:
-        return [];
-    }
-  }, [navigationLevel, menu, selectedCategory, selectedSubCategory]);
-
-  const navTitle = useMemo(() => {
-    if (selectedProduct) {
-      return selectedProduct.name;
-    }
-    switch (navigationLevel) {
-      case 'categories':
-        return 'Categorías';
-      case 'subcategories':
-        return selectedCategory?.name
-          ? `Categoría: ${selectedCategory.name}`
-          : 'Subcategorías';
-      case 'products':
-        return selectedSubCategory?.name
-          ? `Subcategoría: ${selectedSubCategory.name}`
-          : 'Productos';
-      default:
-        return 'Categorías';
-    }
-  }, [navigationLevel, selectedCategory, selectedSubCategory, selectedProduct]);
+  const { styles } = useOrderScreenStyles();
 
   // Handlers unificados
   const handleProductSelect = useCallback(
@@ -203,31 +162,6 @@ export const useOrderCreationScreen = () => {
     !shiftLoading && (!shift || shift.status !== 'OPEN');
   const showCartButton = !isCartVisible && !selectedProduct;
 
-  // Estilos (movidos desde el componente)
-  const styles = useMemo(
-    () => ({
-      safeArea: {
-        flex: 1,
-        backgroundColor: theme.colors.background,
-      },
-      appBar: {
-        backgroundColor: theme.colors.elevation.level2,
-        alignItems: 'center' as const,
-      },
-      appBarTitle: {
-        ...theme.fonts.titleMedium,
-        color: theme.colors.onSurface,
-        fontWeight: 'bold' as const,
-        textAlign: 'center' as const,
-      },
-      appBarContent: {},
-      spacer: {
-        width: 48,
-      },
-    }),
-    [theme],
-  );
-
   // API expuesta al componente
   return {
     // Estados de carga y datos
@@ -240,8 +174,8 @@ export const useOrderCreationScreen = () => {
     isCartVisible,
     selectedProduct,
     navigationLevel,
-    itemsToDisplay,
-    navTitle,
+    itemsToDisplay: screenNavigation.itemsToDisplay,
+    navTitle: screenNavigation.navTitle,
     showCartButton,
     totalItemsCount,
 

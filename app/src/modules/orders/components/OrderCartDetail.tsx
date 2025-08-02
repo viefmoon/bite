@@ -131,7 +131,6 @@ const useOrderCart = ({
     loadOrderForEditing,
   } = useOrderManagement();
 
-
   const subtotal = useOrderSubtotal();
   const total = useOrderTotal();
   const totalItemsCount = useOrderItemsCount();
@@ -503,7 +502,7 @@ const useOrderCart = ({
     if (!visible) {
       setHasLoadedOrder(false);
       setEditingItemProductId(null);
-      
+
       // Limpiar el estado del carrito cuando se cierre el modal en modo edición
       if (isEditMode && hasLoadedOrder) {
         cleanupOrderState();

@@ -25,12 +25,13 @@ const normalizeCartItems = (items: any[]) => {
           half: cust.half,
           action: cust.action,
           name: cust.name || cust.pizzaCustomization?.name,
-          extraCost: cust.extraCost || cust.pizzaCustomization?.toppingValue || 0,
+          extraCost:
+            cust.extraCost || cust.pizzaCustomization?.toppingValue || 0,
         }))
-        .sort((a: any, b: any) => 
+        .sort((a: any, b: any) =>
           `${a.pizzaCustomizationId || ''}-${a.half || ''}-${a.action || ''}`.localeCompare(
-            `${b.pizzaCustomizationId || ''}-${b.half || ''}-${b.action || ''}`
-          )
+            `${b.pizzaCustomizationId || ''}-${b.half || ''}-${b.action || ''}`,
+          ),
         ),
       pizzaExtraCost: item.pizzaExtraCost ?? 0,
     }))
@@ -78,14 +79,17 @@ const normalizeOriginalItems = (items: any[]) => {
         name: cust.name || cust.pizzaCustomization?.name,
         extraCost: cust.extraCost || cust.pizzaCustomization?.toppingValue || 0,
       }))
-      .sort((a: any, b: any) => 
+      .sort((a: any, b: any) =>
         `${a.pizzaCustomizationId || ''}-${a.half || ''}-${a.action || ''}`.localeCompare(
-          `${b.pizzaCustomizationId || ''}-${b.half || ''}-${b.action || ''}`
-        )
+          `${b.pizzaCustomizationId || ''}-${b.half || ''}-${b.action || ''}`,
+        ),
       );
 
     // Calcular pizzaExtraCost de la misma manera que en useOrderManagement
-    const modifiersPrice = modifiers.reduce((sum, mod) => sum + (mod.price || 0), 0);
+    const modifiersPrice = modifiers.reduce(
+      (sum, mod) => sum + (mod.price || 0),
+      0,
+    );
     const calculatedPizzaExtraCost = Math.max(
       0,
       (item.finalPrice || 0) - (item.basePrice || 0) - modifiersPrice,
@@ -96,7 +100,9 @@ const normalizeOriginalItems = (items: any[]) => {
       productId: item.productId,
       variantId: item.productVariantId || null,
       preparationNotes: item.preparationNotes || '',
-      modifiers: modifiers.sort((a, b) => (a.id || '').localeCompare(b.id || '')),
+      modifiers: modifiers.sort((a, b) =>
+        (a.id || '').localeCompare(b.id || ''),
+      ),
       pizzaCustomizations,
       pizzaExtraCost: calculatedPizzaExtraCost,
     });
