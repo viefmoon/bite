@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { IconButton } from 'react-native-paper';
 import { ResponsiveModal } from '@/app/components/responsive/ResponsiveModal';
 import { OrderDetailsView } from './OrderDetailsView';
-import OrderHistoryModal from './OrderHistoryModal';
+import { OrderHistoryModal } from '@/modules/orders/components/OrderHistoryModal';
 
 // Importa los servicios y mappers necesarios
 import { orderService } from '@/app/services/orderService';

@@ -54,10 +54,12 @@ export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
     <ResponsiveModal
       visible={visible}
       onDismiss={onDismiss}
-      maxWidthPercent={90}
-      maxHeightPercent={90}
+      maxWidthPercent={96}
+      maxHeightPercent={95}
       title={`Historial de Orden #${orderNumber || ''}`}
       dismissable={true}
+      noScroll={true}
+      noPadding={false}
     >
       <View style={localStyles.modalHeaderSubtitle}>
         <Text
@@ -73,15 +75,13 @@ export const OrderHistoryModal: React.FC<OrderHistoryModalProps> = ({
 
       <Divider />
 
-      <View style={styles.modalContent}>
-        <OrderHistoryContent
-          orderId={orderId}
-          orderNumber={orderNumber}
-          showHeaderInfo={false}
-          contentContainerStyle={styles.listContent}
-          emptyContainerStyle={styles.emptyContainer}
-        />
-      </View>
+      <OrderHistoryContent
+        orderId={orderId}
+        orderNumber={orderNumber}
+        showHeaderInfo={false}
+        contentContainerStyle={styles.listContent}
+        emptyContainerStyle={styles.emptyContainer}
+      />
     </ResponsiveModal>
   );
 };

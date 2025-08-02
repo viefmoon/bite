@@ -168,16 +168,18 @@ export const OrderHistoryContent: React.FC<OrderHistoryContentProps> = ({
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { flex: 1 }]}>
       {renderHeaderInfo()}
       <FlashList
         data={historyData || []}
         renderItem={renderHistoryItem}
         keyExtractor={(item) => item.id.toString()}
-        estimatedItemSize={120}
+        estimatedItemSize={160}
         contentContainerStyle={contentContainerStyle}
         ListEmptyComponent={renderEmpty}
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
+        bounces={true}
+        removeClippedSubviews={false}
       />
     </View>
   );

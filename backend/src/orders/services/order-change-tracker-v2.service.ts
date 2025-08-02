@@ -14,7 +14,6 @@ export interface ConsolidatedChangesV2 {
     modified?: any[];
     removed?: any[];
   };
-  summary?: string;
 }
 
 @Injectable()
@@ -76,9 +75,6 @@ export class OrderChangeTrackerV2Service {
       };
     }
 
-    const itemCount = order.orderItems?.length || 0;
-    changes.summary = `Nueva orden creada con ${itemCount} producto${itemCount !== 1 ? 's' : ''}`;
-
     return changes;
   }
 
@@ -109,30 +105,6 @@ export class OrderChangeTrackerV2Service {
     }
 
     if (!hasChanges) return null;
-
-    const summaryParts: string[] = [];
-
-    if (changes.order?.fields) {
-      const fields = Object.keys(changes.order.fields);
-      if (fields.length > 0) {
-        summaryParts.push(`Orden: ${fields.join(', ')}`);
-      }
-    }
-
-    if (changes.items) {
-      const itemParts: string[] = [];
-      if (changes.items.added?.length)
-        itemParts.push(`${changes.items.added.length} agregados`);
-      if (changes.items.modified?.length)
-        itemParts.push(`${changes.items.modified.length} modificados`);
-      if (changes.items.removed?.length)
-        itemParts.push(`${changes.items.removed.length} eliminados`);
-      if (itemParts.length > 0) {
-        summaryParts.push(`Productos: ${itemParts.join(', ')}`);
-      }
-    }
-
-    changes.summary = summaryParts.join(' | ');
 
     return changes;
   }
@@ -403,12 +375,7 @@ export class OrderChangeTrackerV2Service {
       preparationNotes: item.preparationNotes,
       modifiers:
         item.productModifiers?.map((m: any) => m.name) || item.modifiers || [],
-      customizations:
-        item.selectedPizzaCustomizations?.map((pc: any) => {
-          const action = pc.action === 'ADD' ? '+' : '-';
-          const half = pc.half ? ` (${pc.half})` : '';
-          return `${action}${pc.pizzaCustomization?.name || 'Personalización'}${half}`;
-        }) ||
+      customizations: this.formatPizzaCustomizationsForHistory(item.selectedPizzaCustomizations) ||
         item.customizations ||
         [],
     };
@@ -426,5 +393,92 @@ export class OrderChangeTrackerV2Service {
     }
 
     return snapshot;
+  }
+
+  private formatPizzaCustomizationsForHistory(selectedPizzaCustomizations: any[] = []): string[] {
+    if (!selectedPizzaCustomizations || selectedPizzaCustomizations.length === 0) {
+      return [];
+    }
+
+    const fullPizza: any[] = [];
+    const half1: any[] = [];
+    const half2: any[] = [];
+
+    // Agrupar por mitades
+    selectedPizzaCustomizations.forEach((customization) => {
+      switch (customization.half) {
+        case 'FULL':
+          fullPizza.push(customization);
+          break;
+        case 'HALF_1':
+          half1.push(customization);
+          break;
+        case 'HALF_2':
+          half2.push(customization);
+          break;
+      }
+    });
+
+    const formatHalf = (customizations: any[]): string => {
+      const flavors: string[] = [];
+      const addedIngredients: string[] = [];
+      const removedIngredients: string[] = [];
+
+      customizations.forEach((customization) => {
+        const customData = customization.pizzaCustomization;
+        if (!customData) return;
+
+        if (customData.type === 'FLAVOR') {
+          flavors.push(customData.name);
+        } else if (customData.type === 'INGREDIENT') {
+          if (customization.action === 'ADD') {
+            addedIngredients.push(customData.name);
+          } else if (customization.action === 'REMOVE') {
+            removedIngredients.push(customData.name);
+          }
+        }
+      });
+
+      const parts: string[] = [];
+
+      if (flavors.length > 0) {
+        parts.push(flavors.join(' - '));
+      }
+
+      if (addedIngredients.length > 0) {
+        parts.push(`con ${addedIngredients.join(', ')}`);
+      }
+
+      if (removedIngredients.length > 0) {
+        parts.push(`sin ${removedIngredients.join(', ')}`);
+      }
+
+      return parts.join(', ');
+    };
+
+    // Si es pizza completa
+    if (fullPizza.length > 0) {
+      const formatted = formatHalf(fullPizza);
+      return formatted ? [formatted] : [];
+    }
+
+    // Si es pizza por mitades
+    const halfParts: string[] = [];
+
+    if (half1.length > 0) {
+      const half1Formatted = formatHalf(half1);
+      if (half1Formatted) {
+        halfParts.push(half1Formatted);
+      }
+    }
+
+    if (half2.length > 0) {
+      const half2Formatted = formatHalf(half2);
+      if (half2Formatted) {
+        halfParts.push(half2Formatted);
+      }
+    }
+
+    return halfParts.length > 0 ? [halfParts.join(' / ')] : [];
   }
 }

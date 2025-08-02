@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { View, TouchableOpacity } from 'react-native';
-import { Text, Divider, Chip, Avatar, Surface } from 'react-native-paper';
+import { Text, Divider, Chip, Avatar, Surface, IconButton } from 'react-native-paper';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useAppTheme } from '@/app/styles/theme';
@@ -30,6 +30,7 @@ export const HistoryItemComponent: React.FC<HistoryItemComponentProps> = ({
 }) => {
   const [expanded, setExpanded] = useState(false);
   const styles = useMemo(() => createStyles(theme), [theme]);
+
 
   const getUserDisplayName = (
     changedByUser?: HistoryItem['changedByUser'],
@@ -125,6 +126,20 @@ export const HistoryItemComponent: React.FC<HistoryItemComponentProps> = ({
               <Text variant="labelSmall" style={styles.userText}>
                 {getUserDisplayName(item.changedByUser, item.user)}
               </Text>
+              {/* Mostrar resumen rápido si existe */}
+              {item.formattedChanges?.Resumen && (
+                <Text 
+                  variant="bodySmall" 
+                  style={[
+                    styles.quickSummary,
+                    { color: theme.colors.onSurfaceVariant }
+                  ]}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {safeStringify(item.formattedChanges.Resumen)}
+                </Text>
+              )}
             </View>
           </View>
           <View style={styles.historyItemRight}>
@@ -150,6 +165,12 @@ export const HistoryItemComponent: React.FC<HistoryItemComponentProps> = ({
                 locale: es,
               })}
             </Text>
+            <IconButton
+              icon={expanded ? 'chevron-up' : 'chevron-down'}
+              size={20}
+              style={{ margin: 0 }}
+              onPress={() => setExpanded(!expanded)}
+            />
           </View>
         </View>
       </TouchableOpacity>
@@ -163,65 +184,196 @@ export const HistoryItemComponent: React.FC<HistoryItemComponentProps> = ({
             <View style={styles.changesContainer}>
               {item.operation === 'INSERT' && (
                 <>
-                  {/* Si hay diff consolidado para INSERT, usarlo */}
-                  {item.diff && (item.diff.order || item.diff.items) ? (
+                  {/* Mostrar información de creación de orden */}
+                  <View style={styles.summaryContainer}>
+                    <Text
+                      variant="bodyMedium"
+                      style={[
+                        styles.summaryText,
+                        { color: theme.colors.primary, fontWeight: '600' },
+                      ]}
+                    >
+                      🎉 Orden creada
+                    </Text>
+                  </View>
+
+                  {/* Mostrar detalles desde el snapshot */}
+                  {item.snapshot && (
                     <>
-                      {item.diff.summary && (
+                      {/* Información básica de la orden */}
+                      <View style={styles.sectionContainer}>
                         <Text
-                          variant="bodySmall"
+                          variant="labelMedium"
                           style={[
-                            styles.summaryText,
+                            styles.sectionTitle,
                             { color: theme.colors.primary },
                           ]}
                         >
-                          {safeStringify(item.diff.summary)}
+                          📝 Detalles de la orden:
                         </Text>
-                      )}
-
-                      {/* Información de la orden */}
-                      {item.diff.order && (
-                        <OrderDetailsSection
-                          orderDiff={item.diff.order}
-                          snapshot={item.snapshot}
-                          styles={styles}
-                        />
-                      )}
-
-                      {/* Productos agregados */}
-                      {item.diff.items?.added &&
-                        item.diff.items.added.length > 0 && (
-                          <>
+                        <View style={styles.changeRow}>
+                          <Text
+                            variant="labelSmall"
+                            style={[
+                              styles.fieldLabel,
+                              { color: theme.colors.onSurfaceVariant, fontWeight: '500' },
+                            ]}
+                          >
+                            • Tipo: {formatValue('orderType', (item.snapshot as any)?.orderType)}
+                          </Text>
+                        </View>
+                        {(item.snapshot as any)?.total && (
+                          <View style={styles.changeRow}>
                             <Text
                               variant="labelSmall"
                               style={[
-                                styles.sectionTitle,
-                                { color: theme.colors.primary },
+                                styles.fieldLabel,
+                                { color: theme.colors.onSurfaceVariant, fontWeight: '500' },
                               ]}
                             >
-                              Productos incluidos en la orden:
+                              • Total: ${(item.snapshot as any)?.total}
                             </Text>
-                            {item.diff.items.added.map((addedItem, idx) => (
-                              <ProductItemRenderer
-                                key={`added-${idx}`}
-                                item={addedItem}
-                                index={idx}
-                                type="added"
-                                styles={styles}
-                              />
-                            ))}
-                          </>
+                          </View>
                         )}
+                        {(item.snapshot as any)?.orderStatus && (
+                          <View style={styles.changeRow}>
+                            <Text
+                              variant="labelSmall"
+                              style={[
+                                styles.fieldLabel,
+                                { color: theme.colors.onSurfaceVariant, fontWeight: '500' },
+                              ]}
+                            >
+                              • Estado: {formatValue('orderStatus', (item.snapshot as any)?.orderStatus)}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
+
+                      {/* Productos incluidos */}
+                      {(item.snapshot as any)?.orderItems && Array.isArray((item.snapshot as any)?.orderItems) && (item.snapshot as any)?.orderItems?.length > 0 && (
+                        <View style={styles.sectionContainer}>
+                          <Text
+                            variant="labelMedium"
+                            style={[
+                              styles.sectionTitle,
+                              { color: theme.colors.tertiary },
+                            ]}
+                          >
+                            🍕 Productos incluidos:
+                          </Text>
+                          {((item.snapshot as any)?.orderItems || []).map((orderItem: any, idx: number) => (
+                            <View key={idx} style={styles.productSection}>
+                              <Text
+                                variant="bodySmall"
+                                style={[
+                                  styles.productItem,
+                                  { color: theme.colors.onSurface, fontWeight: '500' },
+                                ]}
+                              >
+                                • {orderItem.productName}{orderItem.variantName ? ` - ${orderItem.variantName}` : ''}
+                              </Text>
+                              {orderItem.customizations && orderItem.customizations.length > 0 && (
+                                <Text
+                                  variant="bodySmall"
+                                  style={[
+                                    styles.productItem,
+                                    {
+                                      color: theme.colors.onSurfaceVariant,
+                                      marginLeft: theme.spacing.l,
+                                      fontStyle: 'italic',
+                                    },
+                                  ]}
+                                >
+                                  Personalizaciones: {orderItem.customizations.join(', ')}
+                                </Text>
+                              )}
+                              {orderItem.preparationNotes && (
+                                <Text
+                                  variant="bodySmall"
+                                  style={[
+                                    styles.productItem,
+                                    {
+                                      color: theme.colors.onSurfaceVariant,
+                                      marginLeft: theme.spacing.l,
+                                      fontStyle: 'italic',
+                                    },
+                                  ]}
+                                >
+                                  Notas: {orderItem.preparationNotes}
+                                </Text>
+                              )}
+                              <Text
+                                variant="bodySmall"
+                                style={[
+                                  styles.productItem,
+                                  {
+                                    color: theme.colors.primary,
+                                    marginLeft: theme.spacing.l,
+                                  },
+                                ]}
+                              >
+                                Precio: ${orderItem.finalPrice}
+                              </Text>
+                            </View>
+                          ))}
+                        </View>
+                      )}
+
+                      {/* Información de entrega si existe */}
+                      {(item.snapshot as any)?.deliveryInfo && (
+                        <View style={styles.sectionContainer}>
+                          <Text
+                            variant="labelMedium"
+                            style={[
+                              styles.sectionTitle,
+                              { color: theme.colors.secondary },
+                            ]}
+                          >
+                            🚚 Información de entrega:
+                          </Text>
+                          {(item.snapshot as any)?.deliveryInfo?.recipientName && (
+                            <View style={styles.changeRow}>
+                              <Text
+                                variant="labelSmall"
+                                style={[
+                                  styles.fieldLabel,
+                                  { color: theme.colors.onSurfaceVariant, fontWeight: '500' },
+                                ]}
+                              >
+                                • Destinatario: {(item.snapshot as any)?.deliveryInfo?.recipientName}
+                              </Text>
+                            </View>
+                          )}
+                          {(item.snapshot as any)?.deliveryInfo?.recipientPhone && (
+                            <View style={styles.changeRow}>
+                              <Text
+                                variant="labelSmall"
+                                style={[
+                                  styles.fieldLabel,
+                                  { color: theme.colors.onSurfaceVariant, fontWeight: '500' },
+                                ]}
+                              >
+                                • Teléfono: {(item.snapshot as any)?.deliveryInfo?.recipientPhone}
+                              </Text>
+                            </View>
+                          )}
+                          {(item.snapshot as any)?.deliveryInfo?.fullAddress && (
+                            <View style={styles.changeRow}>
+                              <Text
+                                variant="labelSmall"
+                                style={[
+                                  styles.fieldLabel,
+                                  { color: theme.colors.onSurfaceVariant, fontWeight: '500' },
+                                ]}
+                              >
+                                • Dirección: {(item.snapshot as any)?.deliveryInfo?.fullAddress}
+                              </Text>
+                            </View>
+                          )}
+                        </View>
+                      )}
                     </>
-                  ) : (
-                    <Text
-                      variant="bodySmall"
-                      style={[
-                        styles.summaryText,
-                        { color: theme.colors.primary },
-                      ]}
-                    >
-                      Orden creada
-                    </Text>
                   )}
                 </>
               )}
@@ -229,34 +381,238 @@ export const HistoryItemComponent: React.FC<HistoryItemComponentProps> = ({
               {/* Renderizado de otros tipos de operaciones para órdenes */}
               {item.operation === 'UPDATE' && item.formattedChanges && (
                 <>
-                  <Text
-                    variant="bodySmall"
-                    style={[
-                      styles.summaryText,
-                      { color: theme.colors.primary },
-                    ]}
-                  >
-                    Cambios realizados en la orden:
-                  </Text>
-                  {Object.entries(item.formattedChanges).map(
-                    ([field, change]) => (
-                      <View key={field} style={styles.changeRow}>
-                        <Text
-                          variant="labelSmall"
-                          style={[
-                            styles.fieldLabel,
-                            { color: theme.colors.onSurfaceVariant },
-                          ]}
-                        >
-                          {formatFieldName(field)}:
-                        </Text>
-                        <ChangeDetailRenderer
-                          change={change}
-                          fieldName={field}
-                          styles={styles}
-                        />
-                      </View>
-                    ),
+                  {/* Mostrar resumen si existe */}
+                  {item.formattedChanges.Resumen && (
+                    <View style={styles.summaryContainer}>
+                      <Text
+                        variant="bodyMedium"
+                        style={[
+                          styles.summaryText,
+                          { color: theme.colors.primary, fontWeight: '600' },
+                        ]}
+                      >
+                        📝 {safeStringify(item.formattedChanges.Resumen)}
+                      </Text>
+                    </View>
+                  )}
+
+                  {/* Cambios en la orden */}
+                  {item.formattedChanges['Cambios en la orden'] && (
+                    <View style={styles.sectionContainer}>
+                      <Text
+                        variant="labelMedium"
+                        style={[
+                          styles.sectionTitle,
+                          { color: theme.colors.primary },
+                        ]}
+                      >
+                        🏷️ Cambios en la orden:
+                      </Text>
+                      {Object.entries(item.formattedChanges['Cambios en la orden'] as Record<string, any>).map(
+                        ([field, change]) => (
+                          <View key={field} style={styles.changeRow}>
+                            <Text
+                              variant="labelSmall"
+                              style={[
+                                styles.fieldLabel,
+                                { color: theme.colors.onSurfaceVariant, fontWeight: '500' },
+                              ]}
+                            >
+                              • {field}:
+                            </Text>
+                            <View style={styles.changeValues}>
+                              <Text
+                                variant="bodySmall"
+                                style={[
+                                  styles.oldValue,
+                                  { color: theme.colors.error },
+                                ]}
+                              >
+                                {formatValue(field, change.anterior)}
+                              </Text>
+                              <Text
+                                variant="bodySmall"
+                                style={[
+                                  styles.arrow,
+                                  { color: theme.colors.onSurfaceVariant },
+                                ]}
+                              >
+                                →
+                              </Text>
+                              <Text
+                                variant="bodySmall"
+                                style={[
+                                  styles.newValue,
+                                  { color: theme.colors.primary },
+                                ]}
+                              >
+                                {formatValue(field, change.nuevo)}
+                              </Text>
+                            </View>
+                          </View>
+                        ),
+                      )}
+                    </View>
+                  )}
+
+                  {/* Información de entrega */}
+                  {item.formattedChanges['Información de entrega'] && (
+                    <View style={styles.sectionContainer}>
+                      <Text
+                        variant="labelMedium"
+                        style={[
+                          styles.sectionTitle,
+                          { color: theme.colors.secondary },
+                        ]}
+                      >
+                        🚚 Información de entrega:
+                      </Text>
+                      {Object.entries(item.formattedChanges['Información de entrega'] as Record<string, any>).map(
+                        ([field, change]) => (
+                          <View key={field} style={styles.changeRow}>
+                            <Text
+                              variant="labelSmall"
+                              style={[
+                                styles.fieldLabel,
+                                { color: theme.colors.onSurfaceVariant, fontWeight: '500' },
+                              ]}
+                            >
+                              • {field}:
+                            </Text>
+                            <View style={styles.changeValues}>
+                              <Text
+                                variant="bodySmall"
+                                style={[
+                                  styles.oldValue,
+                                  { color: theme.colors.error },
+                                ]}
+                              >
+                                {formatValue(field, change.anterior)}
+                              </Text>
+                              <Text
+                                variant="bodySmall"
+                                style={[
+                                  styles.arrow,
+                                  { color: theme.colors.onSurfaceVariant },
+                                ]}
+                              >
+                                →
+                              </Text>
+                              <Text
+                                variant="bodySmall"
+                                style={[
+                                  styles.newValue,
+                                  { color: theme.colors.primary },
+                                ]}
+                              >
+                                {formatValue(field, change.nuevo)}
+                              </Text>
+                            </View>
+                          </View>
+                        ),
+                      )}
+                    </View>
+                  )}
+
+                  {/* Cambios en productos */}
+                  {item.formattedChanges['Cambios en productos'] && (
+                    <View style={styles.sectionContainer}>
+                      <Text
+                        variant="labelMedium"
+                        style={[
+                          styles.sectionTitle,
+                          { color: theme.colors.tertiary },
+                        ]}
+                      >
+                        🍕 Cambios en productos:
+                      </Text>
+                      {Object.entries(item.formattedChanges['Cambios en productos'] as Record<string, any>).map(
+                        ([operationType, items]) => {
+                          if (operationType === 'Productos agregados' && Array.isArray(items)) {
+                            return (
+                              <View key={operationType} style={styles.productSection}>
+                                <Text
+                                  variant="labelSmall"
+                                  style={[
+                                    styles.productOperationType,
+                                    { color: theme.colors.primary },
+                                  ]}
+                                >
+                                  ➕ {operationType}:
+                                </Text>
+                                {items.map((item: string, idx: number) => (
+                                  <Text
+                                    key={idx}
+                                    variant="bodySmall"
+                                    style={[
+                                      styles.productItem,
+                                      { color: theme.colors.onSurface },
+                                    ]}
+                                  >
+                                    • {item}
+                                  </Text>
+                                ))}
+                              </View>
+                            );
+                          }
+                          if (operationType === 'Productos modificados' && Array.isArray(items)) {
+                            return (
+                              <View key={operationType} style={styles.productSection}>
+                                <Text
+                                  variant="labelSmall"
+                                  style={[
+                                    styles.productOperationType,
+                                    { color: theme.colors.secondary },
+                                  ]}
+                                >
+                                  ✏️ {operationType}:
+                                </Text>
+                                {items.map((item: string, idx: number) => (
+                                  <Text
+                                    key={idx}
+                                    variant="bodySmall"
+                                    style={[
+                                      styles.productItem,
+                                      { color: theme.colors.onSurface },
+                                    ]}
+                                  >
+                                    • {item}
+                                  </Text>
+                                ))}
+                              </View>
+                            );
+                          }
+                          if (operationType === 'Productos eliminados' && Array.isArray(items)) {
+                            return (
+                              <View key={operationType} style={styles.productSection}>
+                                <Text
+                                  variant="labelSmall"
+                                  style={[
+                                    styles.productOperationType,
+                                    { color: theme.colors.error },
+                                  ]}
+                                >
+                                  ❌ {operationType}:
+                                </Text>
+                                {items.map((item: string, idx: number) => (
+                                  <Text
+                                    key={idx}
+                                    variant="bodySmall"
+                                    style={[
+                                      styles.productItem,
+                                      { color: theme.colors.onSurface },
+                                    ]}
+                                  >
+                                    • {item}
+                                  </Text>
+                                ))}
+                              </View>
+                            );
+                          }
+                          return null;
+                        },
+                      )}
+                    </View>
                   )}
                 </>
               )}

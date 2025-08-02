@@ -66,7 +66,7 @@ export class OrderChangeLogService {
       enrichedLog.changedByUser = user || null;
 
       if (log.diff) {
-        if (log.diff.order || log.diff.items || log.diff.summary) {
+        if (log.diff.order || log.diff.items) {
           enrichedLog.diff = log.diff;
           enrichedLog.formattedChanges = this.formatChanges(log.diff);
         } else if (log.operation === 'UPDATE') {
@@ -83,11 +83,7 @@ export class OrderChangeLogService {
   private formatChanges(diff: any): Record<string, any> {
     const formatted: Record<string, any> = {};
 
-    if (diff && (diff.order || diff.items || diff.summary)) {
-      if (diff.summary) {
-        formatted['Resumen'] = diff.summary;
-      }
-
+    if (diff && (diff.order || diff.items)) {
       if (diff.order) {
         if (diff.order.fields) {
           formatted['Cambios en la orden'] = this.formatOrderFields(
@@ -153,9 +149,23 @@ export class OrderChangeLogService {
       total: (value) => `$${value}`,
       subtotal: (value) => `$${value}`,
       scheduledAt: (value) =>
-        value ? new Date(value).toLocaleString('es-MX') : 'No programada',
+        value ? new Date(value).toLocaleString('es-MX', { 
+          timeZone: 'America/Mexico_City',
+          year: 'numeric',
+          month: '2-digit', 
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        }) : 'No programada',
       estimatedDeliveryTime: (value) =>
-        value ? new Date(value).toLocaleString('es-MX') : 'No especificado',
+        value ? new Date(value).toLocaleString('es-MX', {
+          timeZone: 'America/Mexico_City',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit', 
+          hour: '2-digit',
+          minute: '2-digit'
+        }) : 'No especificado',
       isFromWhatsApp: (value) => (value ? 'Sí' : 'No'),
       deliveryInfo: (value) => {
         if (!value || typeof value !== 'object') return value;
@@ -188,39 +198,62 @@ export class OrderChangeLogService {
   private formatConsolidatedItemChanges(items: any): any {
     const formatted: any = {};
 
-    // Items agregados - Simplificado para la app
+    // Items agregados - Incluir modificadores y customizations
     if (items.added && items.added.length > 0) {
-      formatted['Productos agregados'] = items.added.map(
-        (item: any) =>
-          item.productName + (item.variantName ? ` - ${item.variantName}` : ''),
+      formatted['Productos agregados'] = items.added.map((item: any) =>
+        this.formatItemWithDetails(item),
       );
     }
 
-    // Items modificados - Simplificado mostrando antes y después
+    // Items modificados - Mostrar antes y después con detalles completos
     if (items.modified && items.modified.length > 0) {
       formatted['Productos modificados'] = items.modified.map(
         (change: any) => ({
-          antes:
-            change.before.productName +
-            (change.before.variantName
-              ? ` - ${change.before.variantName}`
-              : ''),
-          después:
-            change.after.productName +
-            (change.after.variantName ? ` - ${change.after.variantName}` : ''),
+          antes: this.formatItemWithDetails(change.before),
+          después: this.formatItemWithDetails(change.after),
         }),
       );
     }
 
-    // Items eliminados - Simplificado para la app
+    // Items eliminados - Incluir modificadores y customizations
     if (items.removed && items.removed.length > 0) {
-      formatted['Productos eliminados'] = items.removed.map(
-        (item: any) =>
-          item.productName + (item.variantName ? ` - ${item.variantName}` : ''),
+      formatted['Productos eliminados'] = items.removed.map((item: any) =>
+        this.formatItemWithDetails(item),
       );
     }
 
     return formatted;
+  }
+
+  private formatItemWithDetails(item: any): string {
+    const parts: string[] = [];
+    
+    // Nombre base: si tiene variante, mostrar solo la variante, sino el producto
+    const baseName = item.variantName || item.productName;
+    parts.push(baseName);
+
+    // Modificadores
+    if (item.modifiers && item.modifiers.length > 0) {
+      const modifiersStr = Array.isArray(item.modifiers) 
+        ? item.modifiers.join(', ')
+        : item.modifiers;
+      parts.push(`Modificadores: ${modifiersStr}`);
+    }
+
+    // Pizza customizations (entre paréntesis)
+    if (item.customizations && item.customizations.length > 0) {
+      const customizationsStr = Array.isArray(item.customizations)
+        ? item.customizations.join(', ')
+        : item.customizations;
+      parts.push(`(${customizationsStr})`);
+    }
+
+    // Notas de preparación
+    if (item.preparationNotes) {
+      parts.push(`Notas: ${item.preparationNotes}`);
+    }
+
+    return parts.join(' - ');
   }
 
   private formatOrderFields(fields: any): any {
@@ -232,10 +265,28 @@ export class OrderChangeLogService {
         const label = this.getFieldLabel(field);
         const formatter = this.getFieldFormatter(field);
 
-        formatted[label] = {
-          anterior: formatter(before),
-          nuevo: formatter(after),
-        };
+        // Campo agregado (de null/undefined/vacío a valor)
+        if ((!before || before === '' || before === null || before === undefined) && after) {
+          formatted[label] = {
+            type: 'added',
+            value: formatter(after)
+          };
+        }
+        // Campo removido (de valor a null/undefined/vacío)
+        else if (before && (!after || after === '' || after === null || after === undefined)) {
+          formatted[label] = {
+            type: 'removed',
+            value: formatter(before)
+          };
+        }
+        // Campo actualizado (de valor a valor diferente)
+        else if (before && after && before !== after) {
+          formatted[label] = {
+            type: 'changed',
+            anterior: formatter(before),
+            nuevo: formatter(after),
+          };
+        }
       }
     }
 
@@ -250,10 +301,29 @@ export class OrderChangeLogService {
       if (Array.isArray(change) && change.length === 2) {
         const [before, after] = change;
         const label = this.getDeliveryFieldLabel(field);
-        formatted[label] = {
-          anterior: before || 'No especificado',
-          nuevo: after || 'No especificado',
-        };
+        
+        // Campo agregado (de null/undefined/vacío a valor)
+        if ((!before || before === '' || before === null || before === undefined) && after) {
+          formatted[label] = {
+            type: 'added',
+            value: after
+          };
+        }
+        // Campo removido (de valor a null/undefined/vacío)
+        else if (before && (!after || after === '' || after === null || after === undefined)) {
+          formatted[label] = {
+            type: 'removed',
+            value: before
+          };
+        }
+        // Campo actualizado (de valor a valor diferente)
+        else if (before && after && before !== after) {
+          formatted[label] = {
+            type: 'changed',
+            anterior: before,
+            nuevo: after,
+          };
+        }
       }
     }
 
@@ -290,9 +360,23 @@ export class OrderChangeLogService {
       orderStatus: (value) => this.formatOrderStatus(value),
       orderType: (value) => this.formatOrderType(value),
       scheduledAt: (value) =>
-        value ? new Date(value).toLocaleString('es-MX') : 'No programada',
+        value ? new Date(value).toLocaleString('es-MX', { 
+          timeZone: 'America/Mexico_City',
+          year: 'numeric',
+          month: '2-digit', 
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        }) : 'No programada',
       estimatedDeliveryTime: (value) =>
-        value ? new Date(value).toLocaleString('es-MX') : 'No especificado',
+        value ? new Date(value).toLocaleString('es-MX', {
+          timeZone: 'America/Mexico_City',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit', 
+          hour: '2-digit',
+          minute: '2-digit'
+        }) : 'No especificado',
       isFromWhatsApp: (value) => (value ? 'Sí' : 'No'),
     };
     return (

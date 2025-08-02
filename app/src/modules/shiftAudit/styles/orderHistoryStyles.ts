@@ -47,10 +47,12 @@ export const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
       marginBottom: theme.spacing.m,
       borderRadius: theme.roundness,
       backgroundColor: theme.colors.surface,
-      overflow: 'hidden',
+      overflow: 'visible',
+      minHeight: 80,
     },
     historyItemHeader: {
       padding: theme.spacing.m,
+      backgroundColor: theme.colors.surface,
     },
     historyItemContent: {
       flexDirection: 'row',
@@ -63,7 +65,9 @@ export const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
       flex: 1,
     },
     historyItemRight: {
-      alignItems: 'flex-end',
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'flex-end',
     },
     operationIcon: {
       marginRight: theme.spacing.m,
@@ -103,6 +107,8 @@ export const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: theme.colors.outlineVariant,
       padding: theme.spacing.m,
+      backgroundColor: theme.colors.surface,
+      minHeight: 100,
     },
     dividerMargin: {
       marginVertical: theme.spacing.s,
@@ -245,6 +251,7 @@ export const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     },
     listContent: {
       paddingBottom: theme.spacing.l,
+      paddingHorizontal: theme.spacing.xs,
     },
     // Estilos adicionales para modal
     modalContainer: {
@@ -307,5 +314,52 @@ export const createStyles = (theme: ReturnType<typeof useAppTheme>) =>
     modalContent: {
       flex: 1,
       padding: theme.spacing.m,
+    },
+    // Nuevos estilos para el historial mejorado
+    summaryContainer: {
+      backgroundColor: theme.colors.primaryContainer,
+      padding: theme.spacing.m,
+      borderRadius: theme.roundness,
+      marginBottom: theme.spacing.m,
+    },
+    sectionContainer: {
+      marginBottom: theme.spacing.m,
+      padding: theme.spacing.s,
+      backgroundColor: theme.colors.elevation.level1,
+      borderRadius: theme.roundness,
+    },
+    changeValues: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: theme.spacing.xs,
+      marginLeft: theme.spacing.m,
+    },
+    oldValue: {
+      textDecorationLine: 'line-through',
+      opacity: 0.7,
+    },
+    arrow: {
+      marginHorizontal: theme.spacing.s,
+      fontSize: 16,
+    },
+    newValue: {
+      fontWeight: '500',
+    },
+    productSection: {
+      marginTop: theme.spacing.s,
+      marginLeft: theme.spacing.m,
+    },
+    productOperationType: {
+      fontWeight: '600',
+      marginBottom: theme.spacing.xs,
+    },
+    productItem: {
+      paddingLeft: theme.spacing.m,
+      paddingVertical: theme.spacing.xs,
+    },
+    quickSummary: {
+      marginTop: theme.spacing.xs,
+      fontStyle: 'italic',
+      opacity: 0.8,
     },
   });
